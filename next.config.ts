@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  transpilePackages: ['@ant-design/icons', 'antd', '@ant-design/cssinjs'],
 };
 
 export default nextConfig;
