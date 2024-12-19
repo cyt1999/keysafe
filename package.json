@@ -9,15 +9,16 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@ant-design/cssinjs": "^1.22.1",
     "@ant-design/icons": "^5.5.2",
     "@types/antd": "^1.0.4",
     "antd": "^5.22.5",
+    "ethers": "^6.13.4",
     "next": "15.1.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@ant-design/cssinjs": "^1.22.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

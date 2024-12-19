@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Layout, Button, Table, Modal, Form, Input, Typography, Space, Card, Avatar } from 'antd';
+import { Layout, Button, Table, Modal, Form, Input, Typography, Space, Card, Avatar, Tag } from 'antd';
 import { PlusOutlined, WalletOutlined, EyeOutlined, EditOutlined, DeleteOutlined, LockOutlined, GlobalOutlined, UserOutlined } from '@ant-design/icons';
 import { ConfigProvider, theme } from 'antd';
 import '../styles/password-manager.css';
+import { useWallet } from '../hooks/useWallet';
+import { getNetworkInfo } from '../config/networks';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -12,7 +14,7 @@ const { Search } = Input;
 
 export default function PasswordManager() {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
+  const { isConnected, address, network, connectWallet, disconnectWallet } = useWallet();
   
   const demoData = [
     {
@@ -113,20 +115,112 @@ export default function PasswordManager() {
               密码管理器
             </Title>
           </Space>
-          <Button 
-            type={isConnected ? "default" : "primary"}
-            icon={<WalletOutlined />}
-            size="large"
-            onClick={() => setIsConnected(!isConnected)}
-            style={{ 
-              borderRadius: '20px',
-              height: '40px',
-              background: isConnected ? '#fff' : 'linear-gradient(45deg, #00B96B, #00D6A2)',
-              boxShadow: isConnected ? 'none' : '0 4px 12px rgba(0, 185, 107, 0.25)',
-            }}
-          >
-            {isConnected ? "已连接 (0x1234...5678)" : "连接钱包"}
-          </Button>
+          <Space>
+            {network && (
+              <div className="network-status-container">
+                <Tag 
+                  icon={
+                    <img 
+                      src={getNetworkInfo(network).logo} 
+                      alt={getNetworkInfo(network).name}
+                      style={{ 
+                        width: '14px', 
+                        height: '14px',
+                        marginRight: '4px'
+                      }} 
+                    />
+                  }
+                  style={{ 
+                    padding: '6px 12px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: `${getNetworkInfo(network).color}15`,
+                    color: getNetworkInfo(network).color,
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    boxShadow: `0 2px 4px ${getNetworkInfo(network).color}10`,
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {getNetworkInfo(network).name}
+                </Tag>
+              </div>
+            )}
+            <Button 
+              type={isConnected ? "default" : "primary"}
+              icon={
+                isConnected ? (
+                  <div style={{ 
+                    width: '6px', 
+                    height: '6px', 
+                    background: '#00B96B',
+                    borderRadius: '50%',
+                    marginRight: '8px',
+                    boxShadow: '0 0 0 2px rgba(0, 185, 107, 0.2)'
+                  }} />
+                ) : (
+                  <WalletOutlined />
+                )
+              }
+              style={{ 
+                borderRadius: '12px',
+                padding: '4px 16px',
+                height: '36px',
+                background: isConnected 
+                  ? 'rgba(0, 185, 107, 0.1)'
+                  : 'linear-gradient(135deg, #00B96B 0%, #00D6A2 100%)',
+                border: isConnected 
+                  ? '1px solid rgba(0, 185, 107, 0.2)'
+                  : 'none',
+                color: isConnected ? '#00B96B' : '#fff',
+                fontWeight: 500,
+                fontSize: '13px',
+                boxShadow: isConnected 
+                  ? 'none' 
+                  : '0 4px 12px rgba(0, 185, 107, 0.25)',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+              onMouseEnter={(e) => {
+                const button = e.currentTarget;
+                button.style.transform = 'translateY(-1px)';
+                if (!isConnected) {
+                  button.style.boxShadow = '0 6px 16px rgba(0, 185, 107, 0.3)';
+                } else {
+                  button.style.background = 'rgba(0, 185, 107, 0.15)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                const button = e.currentTarget;
+                button.style.transform = 'translateY(0)';
+                if (!isConnected) {
+                  button.style.boxShadow = '0 4px 12px rgba(0, 185, 107, 0.25)';
+                } else {
+                  button.style.background = 'rgba(0, 185, 107, 0.1)';
+                }
+              }}
+              onClick={() => isConnected ? disconnectWallet() : connectWallet()}
+            >
+              {isConnected ? (
+                <Space size={4}>
+                  <span>已连接</span>
+                  <span style={{ 
+                    opacity: 0.7,
+                    fontSize: '12px',
+                    color: '#00B96B'
+                  }}>
+                    ({address?.slice(0, 4)}...{address?.slice(-4)})
+                  </span>
+                </Space>
+              ) : (
+                "连接钱包"
+              )}
+            </Button>
+          </Space>
         </Header>
         
         <Content style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
@@ -233,7 +327,7 @@ export default function PasswordManager() {
               <Form.Item 
                 label="密码" 
                 required
-                rules={[{ required: true, message: '请输入密码' }]}
+                rules={[{ required: true, message: '���输入密码' }]}
               >
                 <Input.Password 
                   prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
