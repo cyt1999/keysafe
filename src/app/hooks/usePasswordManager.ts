@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { PasswordEntry } from '../types/password';
 import { PasswordManagerService } from '../services/PasswordManager';
 import { useWallet } from './useWallet';
@@ -26,14 +26,25 @@ export function usePasswordManager(): UsePasswordManagerReturn {
   const [passwords, setPasswords] = useState<PasswordEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [passwordManager] = useState(() => new PasswordManagerService());
+  const [isLocked, setIsLocked] = useState(true);
   const { signer } = useWallet();
+  const passwordManagerRef = useRef<PasswordManagerService>();
+
+  // 确保只创建一次 PasswordManagerService 实例
+  if (!passwordManagerRef.current) {
+    passwordManagerRef.current = new PasswordManagerService();
+  }
+
+  const passwordManager = passwordManagerRef.current;
 
   /**
    * 刷新密码列表
    */
   const refresh = useCallback(async () => {
-    if (!signer) return;
+    if (!signer || passwordManager.isLocked()) {
+      setPasswords([]);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -58,12 +69,17 @@ export function usePasswordManager(): UsePasswordManagerReturn {
     }
 
     try {
+      console.log('开始解锁密码管理器...');
       setLoading(true);
       setError(null);
       await passwordManager.unlock(signer, masterPassword);
+      console.log('密码管理器解锁成功，更新状态...');
+      setIsLocked(false);
       await refresh();
+      console.log('解锁流程完成');
     } catch (error) {
       console.error('解锁失败:', error);
+      setIsLocked(true);
       throw error;
     } finally {
       setLoading(false);
@@ -74,7 +90,9 @@ export function usePasswordManager(): UsePasswordManagerReturn {
    * 锁定密码管理器
    */
   const lock = useCallback(() => {
+    console.log('锁定密码管理器...');
     passwordManager.lock();
+    setIsLocked(true);
     setPasswords([]);
   }, [passwordManager]);
 
@@ -82,8 +100,8 @@ export function usePasswordManager(): UsePasswordManagerReturn {
    * 添加密码
    */
   const addPassword = useCallback(async (entry: Omit<PasswordEntry, 'id'>) => {
-    if (!signer) {
-      throw new Error('请先连接钱包');
+    if (!signer || passwordManager.isLocked()) {
+      throw new Error('请先解锁密码管理器');
     }
 
     try {
@@ -106,8 +124,8 @@ export function usePasswordManager(): UsePasswordManagerReturn {
     id: string,
     updates: Partial<Omit<PasswordEntry, 'id'>>
   ) => {
-    if (!signer) {
-      throw new Error('请先连接钱包');
+    if (!signer || passwordManager.isLocked()) {
+      throw new Error('请先解锁密码管理器');
     }
 
     try {
@@ -127,8 +145,8 @@ export function usePasswordManager(): UsePasswordManagerReturn {
    * 删除密码
    */
   const deletePassword = useCallback(async (id: string) => {
-    if (!signer) {
-      throw new Error('请先连接钱包');
+    if (!signer || passwordManager.isLocked()) {
+      throw new Error('请先解锁密码管理器');
     }
 
     try {
@@ -147,16 +165,23 @@ export function usePasswordManager(): UsePasswordManagerReturn {
   // 监听钱包连接状态
   useEffect(() => {
     if (!signer) {
+      console.log('钱包断开连接，重置状态...');
       setPasswords([]);
-      return;
+      setIsLocked(true);
+      passwordManager.lock();
     }
-  }, [signer]);
+  }, [signer, passwordManager]);
+
+  // 同步锁定状态
+  useEffect(() => {
+    setIsLocked(passwordManager.isLocked());
+  }, [passwordManager]);
 
   return {
     passwords,
     loading,
     error,
-    isLocked: passwordManager.isLocked(),
+    isLocked,
     addPassword,
     updatePassword,
     deletePassword,

@@ -1,4 +1,5 @@
-import { ethers } from 'ethers';
+import { Buffer } from 'buffer';
+import { pbkdf2Sync, randomBytes, createCipheriv, createDecipheriv } from 'crypto';
 
 /**
  * 固定的签名消息
@@ -9,9 +10,10 @@ const SIGN_MESSAGE = 'KEYSAFE_AUTH_V1';
  * 加密工具类
  */
 export class CryptoUtils {
-  private static readonly PBKDF2_ITERATIONS = 100000;
-  private static readonly KEY_LENGTH = 256;
-  private static readonly SALT_LENGTH = 16;
+  private static readonly ITERATIONS = 100000; // PBKDF2 迭代次数
+  private static readonly KEY_LENGTH = 32; // 256 bits
+  private static readonly SALT_LENGTH = 16; // 128 bits
+  private static readonly ALGORITHM = 'aes-256-gcm';
   private static readonly IV_LENGTH = 12;
   private static readonly AUTH_TAG_LENGTH = 16;
 
@@ -23,103 +25,178 @@ export class CryptoUtils {
   }
 
   /**
-   * 从签名和主密码派生加密密钥
+   * 从主密码派生密钥
    */
-  static async deriveKey(signature: string, masterPassword: string, address: string): Promise<CryptoKey> {
-    // 组合密钥材料
-    const material = signature + masterPassword;
-    const encoder = new TextEncoder();
+  public static deriveKey(masterPassword: string, salt: Buffer): Buffer {
+    console.log('Deriving key with:', {
+      masterPassword,
+      salt: salt.toString('hex')
+    });
     
-    // 导入密钥材料
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw',
-      encoder.encode(material),
-      'PBKDF2',
-      false,
-      ['deriveBits', 'deriveKey']
+    const key = pbkdf2Sync(
+      masterPassword,
+      salt,
+      this.ITERATIONS,
+      this.KEY_LENGTH,
+      'sha256'
     );
-
-    // 使用钱包地址作为 salt
-    const salt = encoder.encode(address.toLowerCase());
-
-    // 派生加密密钥
-    return await crypto.subtle.deriveKey(
-      {
-        name: 'PBKDF2',
-        salt,
-        iterations: this.PBKDF2_ITERATIONS,
-        hash: 'SHA-256'
-      },
-      keyMaterial,
-      { name: 'AES-GCM', length: this.KEY_LENGTH },
-      true,
-      ['encrypt', 'decrypt']
-    );
+    
+    console.log('Derived key:', key.toString('hex'));
+    return key;
   }
 
   /**
-   * 使用会话密钥加密数据
+   * 生成随机盐值
    */
-  static async encryptWithKey(data: string, key: CryptoKey): Promise<string> {
+  public static generateSalt(): Buffer {
+    const salt = randomBytes(this.SALT_LENGTH);
+    console.log('Generated salt:', salt.toString('hex'));
+    return salt;
+  }
+
+  /**
+   * 生成随机验证字符串
+   */
+  public static generateVerificationString(): Buffer {
+    const verificationString = randomBytes(32);
+    console.log('Generated verification string:', verificationString.toString('hex'));
+    return verificationString;
+  }
+
+  /**
+   * 加密数据
+   */
+  public static encrypt(data: Buffer, key: Buffer): {
+    encrypted: Buffer;
+    iv: Buffer;
+    authTag: Buffer;
+  } {
+    console.log('Encrypting data:', {
+      data: data.toString('hex'),
+      key: key.toString('hex')
+    });
+
+    const iv = randomBytes(this.IV_LENGTH);
+    const cipher = createCipheriv(this.ALGORITHM, key, iv, {
+      authTagLength: this.AUTH_TAG_LENGTH,
+    });
+
+    const encrypted = Buffer.concat([cipher.update(data), cipher.final()]);
+    const authTag = cipher.getAuthTag();
+
+    console.log('Encryption result:', {
+      encrypted: encrypted.toString('hex'),
+      iv: iv.toString('hex'),
+      authTag: authTag.toString('hex')
+    });
+
+    return { encrypted, iv, authTag };
+  }
+
+  /**
+   * 解密数据
+   */
+  public static decrypt(
+    encrypted: Buffer,
+    key: Buffer,
+    iv: Buffer,
+    authTag: Buffer
+  ): Buffer {
+    console.log('Decrypting data:', {
+      encrypted: encrypted.toString('hex'),
+      key: key.toString('hex'),
+      iv: iv.toString('hex'),
+      authTag: authTag.toString('hex')
+    });
+
+    const decipher = createDecipheriv(this.ALGORITHM, key, iv, {
+      authTagLength: this.AUTH_TAG_LENGTH,
+    });
+    decipher.setAuthTag(authTag);
+
+    const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+    console.log('Decryption result:', decrypted.toString('hex'));
+    return decrypted;
+  }
+
+  /**
+   * 创建主密码验证数据
+   */
+  public static createMasterPasswordVerification(
+    masterPassword: string
+  ): {
+    salt: string;
+    verificationData: string;
+  } {
+    console.log('Creating verification data for password:', masterPassword);
+    
+    const salt = this.generateSalt();
+    const key = this.deriveKey(masterPassword, salt);
+    const verificationString = this.generateVerificationString();
+    
+    const { encrypted, iv, authTag } = this.encrypt(verificationString, key);
+    
+    // 将所有数据编码为 base64 字符串
+    const verificationData = Buffer.concat([
+      encrypted,
+      iv,
+      authTag
+    ]).toString('base64');
+    
+    const result = {
+      salt: salt.toString('base64'),
+      verificationData
+    };
+    
+    console.log('Created verification data:', result);
+    return result;
+  }
+
+  /**
+   * 验证主密码
+   */
+  public static verifyMasterPassword(
+    masterPassword: string,
+    salt: string,
+    verificationData: string
+  ): boolean {
+    console.log('Verifying master password:', {
+      masterPassword,
+      salt,
+      verificationData
+    });
+
     try {
-      // 生成随机 IV
-      const iv = crypto.getRandomValues(new Uint8Array(this.IV_LENGTH));
+      const saltBuffer = Buffer.from(salt, 'base64');
+      const verificationBuffer = Buffer.from(verificationData, 'base64');
       
-      // 加密数据
-      const encoder = new TextEncoder();
-      const encryptedData = await crypto.subtle.encrypt(
-        {
-          name: 'AES-GCM',
-          iv
-        },
-        key,
-        encoder.encode(data)
+      // 解析验证数据
+      const encrypted = verificationBuffer.slice(
+        0,
+        verificationBuffer.length - this.IV_LENGTH - this.AUTH_TAG_LENGTH
+      );
+      const iv = verificationBuffer.slice(
+        verificationBuffer.length - this.IV_LENGTH - this.AUTH_TAG_LENGTH,
+        verificationBuffer.length - this.AUTH_TAG_LENGTH
+      );
+      const authTag = verificationBuffer.slice(
+        verificationBuffer.length - this.AUTH_TAG_LENGTH
       );
 
-      // 组合 IV 和加密数据
-      const result = new Uint8Array(iv.length + encryptedData.byteLength);
-      result.set(iv);
-      result.set(new Uint8Array(encryptedData), iv.length);
+      console.log('Parsed verification data:', {
+        encrypted: encrypted.toString('hex'),
+        iv: iv.toString('hex'),
+        authTag: authTag.toString('hex')
+      });
 
-      // 转换为 Base64 字符串
-      return btoa(String.fromCharCode(...result));
+      // 派生密钥并尝试解密
+      const key = this.deriveKey(masterPassword, saltBuffer);
+      this.decrypt(encrypted, key, iv, authTag);
+      
+      return true;
     } catch (error) {
-      console.error('加密失败:', error);
-      throw new Error('加密失败');
-    }
-  }
-
-  /**
-   * 使用会话密钥解密数据
-   */
-  static async decryptWithKey(encryptedData: string, key: CryptoKey): Promise<string> {
-    try {
-      // 解码 Base64 字符串
-      const data = new Uint8Array(
-        atob(encryptedData)
-          .split('')
-          .map(char => char.charCodeAt(0))
-      );
-
-      // 提取 IV 和加密数据
-      const iv = data.slice(0, this.IV_LENGTH);
-      const ciphertext = data.slice(this.IV_LENGTH);
-
-      // 解密数据
-      const decryptedData = await crypto.subtle.decrypt(
-        {
-          name: 'AES-GCM',
-          iv
-        },
-        key,
-        ciphertext
-      );
-
-      // 转换为字符串
-      return new TextDecoder().decode(decryptedData);
-    } catch (error) {
-      console.error('解密失败:', error);
-      throw new Error('解密失败');
+      console.error('Verification failed:', error);
+      return false;
     }
   }
 

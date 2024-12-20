@@ -4,11 +4,14 @@ import { ethers } from 'ethers';
  * 密码条目接口
  */
 export interface PasswordEntry {
-  id: string;        // 唯一标识符
-  title: string;     // 标题（网站或应用名称）
-  username: string;  // 用户名
-  password: string;  // 加密后的密码
-  website?: string;  // 可选的网站URL
+  id: string;
+  title: string;
+  username: string;
+  password: string;
+  url?: string;
+  notes?: string;
+  createdAt?: number;
+  updatedAt?: number;
 }
 
 /**
