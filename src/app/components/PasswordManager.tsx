@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout, Button, Table, Modal, Form, Input, Typography, Space, Card, Avatar, Tag } from 'antd';
 import { PlusOutlined, WalletOutlined, EyeOutlined, EditOutlined, DeleteOutlined, LockOutlined, GlobalOutlined, UserOutlined } from '@ant-design/icons';
 import { ConfigProvider, theme } from 'antd';
@@ -12,10 +12,27 @@ const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 const { Search } = Input;
 
-export default function PasswordManager() {
+interface PasswordManagerProps {
+  onWalletConnection: (connected: boolean, address: string) => void;
+  isAuthenticated: boolean;
+  onLogout?: () => void;
+  customContent?: React.ReactNode;
+}
+
+export default function PasswordManager({ 
+  onWalletConnection, 
+  isAuthenticated, 
+  onLogout,
+  customContent 
+}: PasswordManagerProps) {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const { isConnected, address, network, connectWallet, disconnectWallet } = useWallet();
-  
+
+  // 监听钱包连接状态变化
+  useEffect(() => {
+    onWalletConnection(isConnected, address || '');
+  }, [isConnected, address, onWalletConnection]);
+
   const demoData = [
     {
       key: '1',
@@ -78,11 +95,136 @@ export default function PasswordManager() {
         <Space size="middle">
           <Button type="text" icon={<EyeOutlined />} />
           <Button type="text" icon={<EditOutlined />} />
-          <Button type="text" danger icon={<DeleteOutlined />} />
+          <Button type="text" icon={<DeleteOutlined />} />
         </Space>
       ),
     },
   ];
+
+  const renderMainContent = () => {
+    // 如果有自定义内容，显示自定义内容
+    if (customContent) {
+      return customContent;
+    }
+
+    // 否则显示密码管理界面
+    return (
+      <Card 
+        bordered={false}
+        style={{ 
+          borderRadius: '16px',
+          boxShadow: '0 8px 24px rgba(0, 185, 107, 0.05)',
+          background: '#FFFFFF',
+          backdropFilter: 'blur(10px)',
+        }}
+      >
+        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Space direction="vertical" size="small">
+            <Title level={4} style={{ margin: 0 }}>密码列表</Title>
+            <Text type="secondary">安全管理您的所有密码</Text>
+          </Space>
+          <Space size="middle">
+            <Search
+              placeholder="搜索密码"
+              style={{ width: 250 }}
+              allowClear
+            />
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />}
+              size="large"
+              onClick={() => setIsModalVisible(true)}
+              style={{ 
+                borderRadius: '8px',
+                boxShadow: '0 2px 8px rgba(0, 185, 107, 0.25)',
+              }}
+            >
+              添加密码
+            </Button>
+          </Space>
+        </div>
+
+        <Table 
+          columns={columns} 
+          dataSource={demoData}
+          bordered={false}
+          pagination={{ 
+            pageSize: 10,
+            showTotal: (total) => `共 ${total} 条记录`,
+            showSizeChanger: true,
+          }}
+          style={{ marginTop: '8px' }}
+        />
+
+        <Modal
+          title={
+            <Space>
+              <PlusOutlined style={{ color: '#00B96B' }} />
+              <span>添加新密码</span>
+            </Space>
+          }
+          open={isModalVisible}
+          onCancel={() => setIsModalVisible(false)}
+          width={520}
+          className="custom-modal"
+          footer={[
+            <Button 
+              key="cancel" 
+              onClick={() => setIsModalVisible(false)}
+              style={{ borderRadius: '6px' }}
+            >
+              取消
+            </Button>,
+            <Button 
+              key="submit" 
+              type="primary"
+              style={{ 
+                borderRadius: '6px',
+                boxShadow: '0 2px 8px rgba(0, 185, 107, 0.25)',
+              }}
+            >
+              保存
+            </Button>,
+          ]}
+        >
+          <Form layout="vertical">
+            <Form.Item 
+              label="网站/应用" 
+              required
+              rules={[{ required: true, message: '请输入网站或应用名称' }]}
+            >
+              <Input 
+                prefix={<GlobalOutlined style={{ color: '#bfbfbf' }} />}
+                placeholder="请输入网站或应用名称" 
+              />
+            </Form.Item>
+
+            <Form.Item 
+              label="用户名" 
+              required
+              rules={[{ required: true, message: '请输入用户名' }]}
+            >
+              <Input 
+                prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
+                placeholder="请输入用户名" 
+              />
+            </Form.Item>
+
+            <Form.Item 
+              label="密码" 
+              required
+              rules={[{ required: true, message: '请输入密码' }]}
+            >
+              <Input.Password 
+                prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
+                placeholder="请输入密码" 
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
+      </Card>
+    );
+  };
 
   return (
     <ConfigProvider
@@ -112,7 +254,7 @@ export default function PasswordManager() {
           <Space size="middle">
             <LockOutlined style={{ fontSize: '24px', color: '#00B96B' }} />
             <Title level={3} style={{ margin: 0, color: '#1A1A1A' }}>
-              密码管理器
+              KeySafe
             </Title>
           </Space>
           <Space>
@@ -158,7 +300,6 @@ export default function PasswordManager() {
                     background: '#00B96B',
                     borderRadius: '50%',
                     marginRight: '8px',
-                    boxShadow: '0 0 0 2px rgba(0, 185, 107, 0.2)'
                   }} />
                 ) : (
                   <WalletOutlined />
@@ -220,122 +361,20 @@ export default function PasswordManager() {
                 "连接钱包"
               )}
             </Button>
+            {isConnected && isAuthenticated && (
+              <Button
+                type="text"
+                onClick={onLogout}
+                style={{ color: '#ff4d4f' }}
+              >
+                退出登录
+              </Button>
+            )}
           </Space>
         </Header>
         
         <Content style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
-          <Card 
-            bordered={false}
-            style={{ 
-              borderRadius: '16px',
-              boxShadow: '0 8px 24px rgba(0, 185, 107, 0.05)',
-              background: '#FFFFFF',
-              backdropFilter: 'blur(10px)',
-            }}
-          >
-            <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Space direction="vertical" size="small">
-                <Title level={4} style={{ margin: 0 }}>密码列表</Title>
-                <Text type="secondary">安全管理您的所有密码</Text>
-              </Space>
-              <Space size="middle">
-                <Search
-                  placeholder="搜索密码"
-                  style={{ width: 250 }}
-                  allowClear
-                />
-                <Button 
-                  type="primary" 
-                  icon={<PlusOutlined />}
-                  size="large"
-                  onClick={() => setIsModalVisible(true)}
-                  style={{ 
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 8px rgba(117, 70, 201, 0.25)',
-                  }}
-                >
-                  添加密码
-                </Button>
-              </Space>
-            </div>
-
-            <Table 
-              columns={columns} 
-              dataSource={demoData}
-              bordered={false}
-              pagination={{ 
-                pageSize: 10,
-                showTotal: (total: any) => `共 ${total} 条记录`,
-                showSizeChanger: true,
-              }}
-              style={{ marginTop: '8px' }}
-            />
-          </Card>
-
-          <Modal
-            title={
-              <Space>
-                <PlusOutlined style={{ color: '#7546C9' }} />
-                <Text strong>添加新密码</Text>
-              </Space>
-            }
-            open={isModalVisible}
-            onCancel={() => setIsModalVisible(false)}
-            width={520}
-            className="custom-modal"
-            footer={[
-              <Button 
-                key="cancel" 
-                onClick={() => setIsModalVisible(false)}
-                style={{ borderRadius: '6px' }}
-              >
-                取消
-              </Button>,
-              <Button 
-                key="submit" 
-                type="primary"
-                style={{ 
-                  borderRadius: '6px',
-                  boxShadow: '0 2px 8px rgba(117, 70, 201, 0.25)',
-                }}
-              >
-                保存
-              </Button>,
-            ]}
-          >
-            <Form layout="vertical">
-              <Form.Item 
-                label="网站/应用" 
-                required
-                rules={[{ required: true, message: '请输入网站或应用名称' }]}
-              >
-                <Input 
-                  prefix={<GlobalOutlined style={{ color: '#bfbfbf' }} />}
-                  placeholder="请输入网站或应用名称" 
-                />
-              </Form.Item>
-              <Form.Item 
-                label="用户名" 
-                required
-                rules={[{ required: true, message: '请输入用户名' }]}
-              >
-                <Input 
-                  prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
-                  placeholder="请输入用户名" 
-                />
-              </Form.Item>
-              <Form.Item 
-                label="密码" 
-                required
-                rules={[{ required: true, message: '���输入密码' }]}
-              >
-                <Input.Password 
-                  prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
-                  placeholder="请输入密码" 
-                />
-              </Form.Item>
-            </Form>
-          </Modal>
+          {renderMainContent()}
         </Content>
       </Layout>
     </ConfigProvider>
