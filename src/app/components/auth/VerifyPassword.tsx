@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { PasswordUtils } from '@/utils/passwordUtils';
 import { StorageUtils } from '@/utils/storage';
 import { SessionUtils } from '@/utils/sessionUtils';
+import { useWallet } from '@/app/hooks/useWallet';
 
 interface VerifyPasswordProps {
   address: string;
@@ -11,8 +12,18 @@ interface VerifyPasswordProps {
 export default function VerifyPassword({ address, onSuccess }: VerifyPasswordProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const { provider } = useWallet();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const getWalletSignature = async (): Promise<string> => {
+    if (!provider) {
+      throw new Error('钱包未连接');
+    }
+    const signer = await provider.getSigner();
+    const message = 'KeySafe: 请签名以验证您的身份';
+    return await signer.signMessage(message);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const userData = StorageUtils.getUserData(address);
@@ -30,12 +41,24 @@ export default function VerifyPassword({ address, onSuccess }: VerifyPasswordPro
       );
 
       if (isValid) {
-        SessionUtils.createSession(address);
-        onSuccess();
+        try {
+          // 获取钱包签名
+          const signature = await getWalletSignature();
+          // 从密码派生主密钥
+          const masterKey = PasswordUtils.deriveKey(password, userData.salt);
+          
+          // 创建会话并保存必要的信息
+          SessionUtils.createSession(address, { signature, masterKey });
+          onSuccess();
+        } catch (error) {
+          console.error('设置加密密钥失败:', error);
+          setError('设置加密密钥失败，请重试');
+        }
       } else {
         setError('密码错误');
       }
     } catch (err) {
+      console.error('验证密码时发生错误:', err);
       setError('验证密码时发生错误');
     }
   };

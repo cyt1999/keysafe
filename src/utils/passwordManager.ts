@@ -1,6 +1,6 @@
 import { CryptoUtils } from './cryptoUtils';
 import { IPFSService } from './ipfsService';
-import { PasswordEntry, EncryptedPasswordData } from './types';
+import { PasswordEntry, EncryptedPasswordData, EncryptedData } from './types';
 
 export class PasswordManager {
   private static readonly DB_NAME = 'keysafe_db';
@@ -104,40 +104,63 @@ export class PasswordManager {
       throw new Error('加密密钥未设置');
     }
 
-    const db = await this.getDatabase();
-    const tx = db.transaction(PasswordManager.STORE_NAME, 'readwrite');
-    const store = tx.objectStore(PasswordManager.STORE_NAME);
+    let encryptedEntry: EncryptedData;
+    try {
+      // 加密新条目
+      encryptedEntry = await CryptoUtils.encrypt(
+        JSON.stringify(entry),
+        this.encryptionKey
+      );
+    } catch (error) {
+      console.error('加密密码失败:', error);
+      throw new Error('加密密码失败');
+    }
 
-    // 获取现有数据
-    const existingData = await new Promise<EncryptedPasswordData | undefined>((resolve) => {
-      const request = store.get('data');
-      request.onsuccess = () => resolve(request.result);
-    });
+    try {
+      const db = await this.getDatabase();
+      const tx = db.transaction(PasswordManager.STORE_NAME, 'readwrite');
+      const store = tx.objectStore(PasswordManager.STORE_NAME);
 
-    // 加密新条目
-    const encryptedEntry = await CryptoUtils.encrypt(
-      JSON.stringify(entry),
-      this.encryptionKey
-    );
+      // 将所有数据库操作包装在一个Promise中
+      await new Promise<void>((resolve, reject) => {
+        // 获取现有数据
+        const getRequest = store.get('data');
+        
+        getRequest.onerror = () => reject(getRequest.error);
+        getRequest.onsuccess = () => {
+          try {
+            const existingData: EncryptedPasswordData = getRequest.result || { entries: {}, lastModified: Date.now() };
+            
+            // 更新数据结构
+            const newData: EncryptedPasswordData = {
+              entries: {
+                ...existingData.entries,
+                [entry.id]: encryptedEntry
+              },
+              lastModified: Date.now()
+            };
 
-    // 更新或创建数据结构
-    const newData: EncryptedPasswordData = {
-      entries: {
-        ...(existingData?.entries || {}),
-        [entry.id]: encryptedEntry
-      },
-      lastModified: Date.now()
-    };
+            // 保存到数据库
+            const putRequest = store.put(newData, 'data');
+            putRequest.onerror = () => reject(putRequest.error);
+            putRequest.onsuccess = () => resolve();
+          } catch (error) {
+            reject(error);
+          }
+        };
+      });
 
-    // 保存到数据库
-    await new Promise<void>((resolve, reject) => {
-      const request = store.put(newData, 'data');
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve();
-    });
+      // 等待事务完成
+      await new Promise<void>((resolve, reject) => {
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(new Error('事务已中止'));
+      });
 
-    // 同步到IPFS
-    await this.syncToIPFS(newData);
+    } catch (error) {
+      console.error('保存密码失败:', error);
+      throw new Error('保存密码失败');
+    }
   }
 
   /**

@@ -1,12 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Layout, Button, Table, Modal, Form, Input, Typography, Space, Card, Avatar, Tag } from 'antd';
+import { Layout, Button, Table, Modal, Form, Input, Typography, Space, Card, Avatar, Tag, message } from 'antd';
 import { PlusOutlined, WalletOutlined, EyeOutlined, EditOutlined, DeleteOutlined, LockOutlined, GlobalOutlined, UserOutlined } from '@ant-design/icons';
 import { ConfigProvider, theme } from 'antd';
 import '../styles/password-manager.css';
 import { useWallet } from '../hooks/useWallet';
 import { getNetworkInfo } from '../config/networks';
+import { PasswordManager as PasswordManagerClass } from '@/utils/passwordManager';
+import { IPFSServiceImpl } from '@/utils/ipfsService';
+import { SessionUtils } from '@/utils/sessionUtils';
+import { PasswordEntry } from '@/utils/types';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -25,7 +29,14 @@ export default function PasswordManager({
   onLogout,
   customContent 
 }: PasswordManagerProps) {
+  const [form] = Form.useForm();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isViewModalVisible, setIsViewModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState<PasswordEntry | null>(null);
+  const [passwordManager, setPasswordManager] = useState<PasswordManagerClass | null>(null);
+  const [passwords, setPasswords] = useState<PasswordEntry[]>([]);
+  const [loading, setLoading] = useState(false);
   const { isConnected, address, network, connectWallet, disconnectWallet } = useWallet();
 
   // 监听钱包连接状态变化
@@ -33,24 +44,131 @@ export default function PasswordManager({
     onWalletConnection(isConnected, address || '');
   }, [isConnected, address, onWalletConnection]);
 
-  const demoData = [
-    {
-      key: '1',
-      website: 'Google',
-      username: 'demo@gmail.com',
-      password: '********',
-      lastModified: '2024-03-20',
-      icon: 'G',
-    },
-    {
-      key: '2',
-      website: 'GitHub',
-      username: 'demouser',
-      password: '********',
-      lastModified: '2024-03-19',
-      icon: 'GH',
-    },
-  ];
+  // 初始化PasswordManager
+  useEffect(() => {
+    if (isAuthenticated && address) {
+      const ipfsService = new IPFSServiceImpl();
+      const manager = new PasswordManagerClass(ipfsService);
+      
+      // 从会话中获取加密所需的信息
+      const session = SessionUtils.getSession();
+      if (session?.signature && session?.masterKey) {
+        manager.setEncryptionKey(session.signature, session.masterKey)
+          .then(() => {
+            setPasswordManager(manager);
+            // 加载已保存的密码
+            loadPasswords(manager);
+          })
+          .catch(console.error);
+      }
+    }
+  }, [isAuthenticated, address]);
+
+  // 加载密码列表
+  const loadPasswords = async (manager: PasswordManagerClass) => {
+    try {
+      setLoading(true);
+      const entries = await manager.getAllEntries();
+      setPasswords(entries);
+    } catch (error) {
+      console.error('加载密码失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 处理添加密码
+  const handleAddPassword = async (values: any) => {
+    if (!passwordManager) {
+      console.error('PasswordManager未初始化');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const passwordEntry: PasswordEntry = {
+        id: crypto.randomUUID(),
+        title: values.website,
+        username: values.username,
+        password: values.password,
+        website: values.website
+      };
+
+      await passwordManager.saveEntry(passwordEntry);
+      await loadPasswords(passwordManager);
+      setIsModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      console.error('保存密码失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 处理删除密码
+  const handleDeletePassword = async (id: string) => {
+    if (!passwordManager) {
+      console.error('PasswordManager未初始化');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await passwordManager.deleteEntry(id);
+      await loadPasswords(passwordManager);
+    } catch (error) {
+      console.error('删除密码失败:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 处理编辑密码
+  const handleEditPassword = async (values: any) => {
+    if (!passwordManager || !currentPassword) {
+      console.error('PasswordManager未初始化或没有选中的密码');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const passwordEntry: PasswordEntry = {
+        id: currentPassword.id,
+        title: values.website,
+        username: values.username,
+        password: values.password,
+        website: values.website
+      };
+
+      await passwordManager.saveEntry(passwordEntry);
+      await loadPasswords(passwordManager);
+      setIsEditModalVisible(false);
+      form.resetFields();
+      message.success('密码修改成功');
+    } catch (error) {
+      console.error('修改密码失败:', error);
+      message.error('修改密码失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 处理查看密码
+  const handleViewPassword = (record: PasswordEntry) => {
+    setCurrentPassword(record);
+    setIsViewModalVisible(true);
+  };
+
+  // 处理编辑密码
+  const handleEditPasswordClick = (record: PasswordEntry) => {
+    setCurrentPassword(record);
+    form.setFieldsValue({
+      website: record.website,
+      username: record.username,
+      password: record.password
+    });
+    setIsEditModalVisible(true);
+  };
 
   const columns = [
     {
@@ -58,10 +176,10 @@ export default function PasswordManager({
       dataIndex: 'website',
       key: 'website',
       width: '25%',
-      render: (text: string, record: any) => (
+      render: (text: string, record: PasswordEntry) => (
         <Space>
-          <Avatar style={{ backgroundColor: record.key === '1' ? '#4285F4' : '#2DA44E' }}>
-            {record.icon}
+          <Avatar style={{ backgroundColor: '#00B96B' }}>
+            {text.charAt(0).toUpperCase()}
           </Avatar>
           <Text strong>{text}</Text>
         </Space>
@@ -82,32 +200,35 @@ export default function PasswordManager({
       render: () => <Text type="secondary">••••••••</Text>,
     },
     {
-      title: '最后修改',
-      dataIndex: 'lastModified',
-      key: 'lastModified',
-      width: '15%',
-      render: (text: string) => <Text type="secondary">{text}</Text>,
-    },
-    {
       title: '操作',
       key: 'action',
-      render: () => (
+      render: (_: any, record: PasswordEntry) => (
         <Space size="middle">
-          <Button type="text" icon={<EyeOutlined />} />
-          <Button type="text" icon={<EditOutlined />} />
-          <Button type="text" icon={<DeleteOutlined />} />
+          <Button 
+            type="text" 
+            icon={<EyeOutlined />} 
+            onClick={() => handleViewPassword(record)}
+          />
+          <Button 
+            type="text" 
+            icon={<EditOutlined />}
+            onClick={() => handleEditPasswordClick(record)}
+          />
+          <Button 
+            type="text" 
+            icon={<DeleteOutlined />} 
+            onClick={() => handleDeletePassword(record.id)}
+          />
         </Space>
       ),
     },
   ];
 
   const renderMainContent = () => {
-    // 如果有自定义内容，显示自定义内容
     if (customContent) {
       return customContent;
     }
 
-    // 否则显示密码管理界面
     return (
       <Card 
         bordered={false}
@@ -146,8 +267,10 @@ export default function PasswordManager({
 
         <Table 
           columns={columns} 
-          dataSource={demoData}
+          dataSource={passwords}
+          loading={loading}
           bordered={false}
+          rowKey="id"
           pagination={{ 
             pageSize: 10,
             showTotal: (total) => `共 ${total} 条记录`,
@@ -164,13 +287,19 @@ export default function PasswordManager({
             </Space>
           }
           open={isModalVisible}
-          onCancel={() => setIsModalVisible(false)}
+          onCancel={() => {
+            setIsModalVisible(false);
+            form.resetFields();
+          }}
           width={520}
           className="custom-modal"
           footer={[
             <Button 
               key="cancel" 
-              onClick={() => setIsModalVisible(false)}
+              onClick={() => {
+                setIsModalVisible(false);
+                form.resetFields();
+              }}
               style={{ borderRadius: '6px' }}
             >
               取消
@@ -178,6 +307,8 @@ export default function PasswordManager({
             <Button 
               key="submit" 
               type="primary"
+              onClick={() => form.submit()}
+              loading={loading}
               style={{ 
                 borderRadius: '6px',
                 boxShadow: '0 2px 8px rgba(0, 185, 107, 0.25)',
@@ -187,10 +318,14 @@ export default function PasswordManager({
             </Button>,
           ]}
         >
-          <Form layout="vertical">
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleAddPassword}
+          >
             <Form.Item 
+              name="website"
               label="网站/应用" 
-              required
               rules={[{ required: true, message: '请输入网站或应用名称' }]}
             >
               <Input 
@@ -200,8 +335,8 @@ export default function PasswordManager({
             </Form.Item>
 
             <Form.Item 
+              name="username"
               label="用户名" 
-              required
               rules={[{ required: true, message: '请输入用户名' }]}
             >
               <Input 
@@ -211,8 +346,128 @@ export default function PasswordManager({
             </Form.Item>
 
             <Form.Item 
+              name="password"
               label="密码" 
-              required
+              rules={[{ required: true, message: '请输入密码' }]}
+            >
+              <Input.Password 
+                prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
+                placeholder="请输入密码" 
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {/* 查看密码的Modal */}
+        <Modal
+          title={
+            <Space>
+              <EyeOutlined style={{ color: '#00B96B' }} />
+              <span>查看密码</span>
+            </Space>
+          }
+          open={isViewModalVisible}
+          onCancel={() => setIsViewModalVisible(false)}
+          footer={[
+            <Button 
+              key="close" 
+              onClick={() => setIsViewModalVisible(false)}
+              style={{ borderRadius: '6px' }}
+            >
+              关闭
+            </Button>
+          ]}
+          width={520}
+          className="custom-modal"
+        >
+          {currentPassword && (
+            <div className="space-y-4">
+              <div>
+                <Text type="secondary">网站/应用：</Text>
+                <Text strong>{currentPassword.website}</Text>
+              </div>
+              <div>
+                <Text type="secondary">用户名：</Text>
+                <Text strong>{currentPassword.username}</Text>
+              </div>
+              <div>
+                <Text type="secondary">密码：</Text>
+                <Text strong>{currentPassword.password}</Text>
+              </div>
+            </div>
+          )}
+        </Modal>
+
+        {/* 编辑密码的Modal */}
+        <Modal
+          title={
+            <Space>
+              <EditOutlined style={{ color: '#00B96B' }} />
+              <span>编辑密码</span>
+            </Space>
+          }
+          open={isEditModalVisible}
+          onCancel={() => {
+            setIsEditModalVisible(false);
+            form.resetFields();
+          }}
+          width={520}
+          className="custom-modal"
+          footer={[
+            <Button 
+              key="cancel" 
+              onClick={() => {
+                setIsEditModalVisible(false);
+                form.resetFields();
+              }}
+              style={{ borderRadius: '6px' }}
+            >
+              取消
+            </Button>,
+            <Button 
+              key="submit" 
+              type="primary"
+              onClick={() => form.submit()}
+              loading={loading}
+              style={{ 
+                borderRadius: '6px',
+                boxShadow: '0 2px 8px rgba(0, 185, 107, 0.25)',
+              }}
+            >
+              保存
+            </Button>,
+          ]}
+        >
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleEditPassword}
+          >
+            <Form.Item 
+              name="website"
+              label="网站/应用" 
+              rules={[{ required: true, message: '请输入网站或应用名称' }]}
+            >
+              <Input 
+                prefix={<GlobalOutlined style={{ color: '#bfbfbf' }} />}
+                placeholder="请输入网站或应用名称" 
+              />
+            </Form.Item>
+
+            <Form.Item 
+              name="username"
+              label="用户名" 
+              rules={[{ required: true, message: '请输入用户名' }]}
+            >
+              <Input 
+                prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
+                placeholder="请输入用户名" 
+              />
+            </Form.Item>
+
+            <Form.Item 
+              name="password"
+              label="密码" 
               rules={[{ required: true, message: '请输入密码' }]}
             >
               <Input.Password 
@@ -290,41 +545,20 @@ export default function PasswordManager({
                 </Tag>
               </div>
             )}
-            <Button 
+            <Button
               type={isConnected ? "default" : "primary"}
-              icon={
-                isConnected ? (
-                  <div style={{ 
-                    width: '6px', 
-                    height: '6px', 
-                    background: '#00B96B',
-                    borderRadius: '50%',
-                    marginRight: '8px',
-                  }} />
-                ) : (
-                  <WalletOutlined />
-                )
-              }
+              icon={<WalletOutlined />}
+              size="large"
               style={{ 
-                borderRadius: '12px',
-                padding: '4px 16px',
-                height: '36px',
-                background: isConnected 
-                  ? 'rgba(0, 185, 107, 0.1)'
-                  : 'linear-gradient(135deg, #00B96B 0%, #00D6A2 100%)',
-                border: isConnected 
-                  ? '1px solid rgba(0, 185, 107, 0.2)'
-                  : 'none',
-                color: isConnected ? '#00B96B' : '#fff',
-                fontWeight: 500,
-                fontSize: '13px',
-                boxShadow: isConnected 
-                  ? 'none' 
-                  : '0 4px 12px rgba(0, 185, 107, 0.25)',
+                borderRadius: '8px',
                 transition: 'all 0.3s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
+                ...(isConnected ? {
+                  background: 'rgba(0, 185, 107, 0.1)',
+                  border: 'none',
+                  color: '#00B96B'
+                } : {
+                  boxShadow: '0 4px 12px rgba(0, 185, 107, 0.25)'
+                })
               }}
               onMouseEnter={(e) => {
                 const button = e.currentTarget;
