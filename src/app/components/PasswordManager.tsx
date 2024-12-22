@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Layout, Button, Table, Modal, Form, Input, Typography, Space, Card, Avatar, Tag, message } from 'antd';
-import { PlusOutlined, WalletOutlined, EyeOutlined, EditOutlined, DeleteOutlined, LockOutlined, GlobalOutlined, UserOutlined } from '@ant-design/icons';
+import { PlusOutlined, WalletOutlined, EyeOutlined, EditOutlined, DeleteOutlined, LockOutlined, GlobalOutlined, UserOutlined, SyncOutlined } from '@ant-design/icons';
 import { ConfigProvider, theme } from 'antd';
 import '../styles/password-manager.css';
 import { useWallet } from '../hooks/useWallet';
@@ -38,6 +38,8 @@ export default function PasswordManager({
   const [passwords, setPasswords] = useState<PasswordEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const { isConnected, address, network, connectWallet, disconnectWallet } = useWallet();
+  const [syncing, setSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
 
   // 监听钱包连接状态变化
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function PasswordManager({
   useEffect(() => {
     if (isAuthenticated && address) {
       const ipfsService = new IPFSServiceImpl();
-      const manager = new PasswordManagerClass(ipfsService);
+      const manager = new PasswordManagerClass(ipfsService, address);
       
       // 从会话中获取加密所需的信息
       const session = SessionUtils.getSession();
@@ -58,10 +60,26 @@ export default function PasswordManager({
             setPasswordManager(manager);
             // 加载已保存的密码
             loadPasswords(manager);
+
+            // 添加同步事件监听
+            manager.addEventListener('sync-completed', handleSyncCompleted);
+            manager.addEventListener('sync-error', handleSyncError);
+
+            // 启动自动同步
+            manager.startAutoSync();
           })
           .catch(console.error);
       }
     }
+
+    // 清理函数
+    return () => {
+      if (passwordManager) {
+        passwordManager.stopAutoSync();
+        passwordManager.removeEventListener('sync-completed', handleSyncCompleted);
+        passwordManager.removeEventListener('sync-error', handleSyncError);
+      }
+    };
   }, [isAuthenticated, address]);
 
   // 加载密码列表
@@ -168,6 +186,46 @@ export default function PasswordManager({
       password: record.password
     });
     setIsEditModalVisible(true);
+  };
+
+  // 处理同步完成事件
+  const handleSyncCompleted = (event: any) => {
+    setSyncing(false);
+    if (event.detail.success) {
+      setLastSyncTime(new Date());
+      if (!event.detail.dataChanged) {
+        message.info('当前数据已是最新，无需同步');
+      } else {
+        message.success('同步成功');
+        // 重新加载密码列表
+        if (passwordManager) {
+          loadPasswords(passwordManager);
+        }
+      }
+    }
+  };
+
+  // 处理同步错误事件
+  const handleSyncError = (event: any) => {
+    setSyncing(false);
+    message.error(`同步失败: ${event.detail.error.message}`);
+  };
+
+  // 手动同步数据
+  const handleManualSync = async () => {
+    if (!passwordManager) {
+      message.error('密码管理器未初始化');
+      return;
+    }
+
+    setSyncing(true);
+    try {
+      await passwordManager.manualSync();
+    } catch (error) {
+      console.error('手动同步失败:', error);
+      message.error('手动同步失败');
+      setSyncing(false);
+    }
   };
 
   const columns = [
@@ -513,6 +571,31 @@ export default function PasswordManager({
             </Title>
           </Space>
           <Space>
+            {isAuthenticated && (
+              <div className="sync-section" style={{ marginRight: '20px' }}>
+                <Space>
+                  <Button
+                    icon={<SyncOutlined spin={syncing} />}
+                    onClick={handleManualSync}
+                    loading={syncing}
+                    disabled={!passwordManager}
+                    style={{
+                      borderRadius: '8px',
+                      background: 'rgba(0, 185, 107, 0.1)',
+                      border: 'none',
+                      color: '#00B96B'
+                    }}
+                  >
+                    同步数据
+                  </Button>
+                  {lastSyncTime && (
+                    <Text style={{ color: '#666' }}>
+                      最后同步: {lastSyncTime.toLocaleString()}
+                    </Text>
+                  )}
+                </Space>
+              </div>
+            )}
             {network && (
               <div className="network-status-container">
                 <Tag 

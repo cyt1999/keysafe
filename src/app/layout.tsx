@@ -8,8 +8,8 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "密码管理器",
-  description: "安全管理您的所有密码",
+  title: "KeySafe",
+  description: "KeySafe 是一个去中心化的密码管理工具，帮助您安全地管理所有密码。",
 };
 
 export default function RootLayout({
