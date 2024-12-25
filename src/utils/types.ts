@@ -22,16 +22,15 @@ export interface PasswordData {
   password: string;
   website?: string;
   notes?: string;
-  randomIV: string;  // 随机值，确保相同数据加密结果不同
 }
 
 /**
  * 加密数据
  */
 export interface EncryptedData {
-  ciphertext: string;  // base64 encoded encrypted data
-  iv: string;         // base64 encoded initialization vector
-  tag: string;        // base64 encoded authentication tag
+  ciphertext: string;  // base64 编码的加密数据
+  iv: string;         // base64 编码的初始化向量
+  tag: string;        // AES-GCM 的认证标签（实际包含在 ciphertext 中）
 }
 
 /**

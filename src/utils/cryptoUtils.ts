@@ -150,7 +150,7 @@ export class CryptoUtils {
   }
 
   /**
-   * 加���数据
+   * 加密数据 - 用于验证主密码验证数据
    */
   static async encrypt(data: string, key: CryptoKey): Promise<EncryptedData> {
     const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -173,7 +173,7 @@ export class CryptoUtils {
   }
 
   /**
-   * 解密数据
+   * 解密数据 - 用于解密主密码验证数据
    */
   static async decrypt(encryptedData: EncryptedData, key: CryptoKey): Promise<string> {
     const ciphertext = Buffer.from(encryptedData.ciphertext, 'base64');
@@ -193,42 +193,32 @@ export class CryptoUtils {
 
   /**
    * 加密密码条目
-   * 将用户数据和随机值打包在一起加密
    */
   static async encryptPasswordEntry(
-    data: Omit<PasswordData, 'randomIV'>, 
+    data: PasswordData, 
     dataKey: CryptoKey
   ): Promise<EncryptedData> {
-    // 1. 生成随机 IV 作为数据的一部分
-    const randomIV = crypto.getRandomValues(new Uint8Array(16));
+    // 1. 将数据对象序列化
+    const jsonData = JSON.stringify(data);
     
-    // 2. 构造完整的数据对象
-    const fullData: PasswordData = {
-      ...data,
-      randomIV: Buffer.from(randomIV).toString('base64')
-    };
+    // 2. 生成加密用的 IV
+    const iv = crypto.getRandomValues(new Uint8Array(12));
     
-    // 3. 将整个对象序列化
-    const jsonData = JSON.stringify(fullData);
-    
-    // 4. 生成加密用的 IV
-    const encryptionIV = crypto.getRandomValues(new Uint8Array(12));
-    
-    // 5. 加密整个数据
-    const encryptedData = await crypto.subtle.encrypt(
+    // 3. 加密数据
+    const encryptedBuffer = await crypto.subtle.encrypt(
       {
         name: 'AES-GCM',
-        iv: encryptionIV
+        iv
       },
       dataKey,
       new TextEncoder().encode(jsonData)
     );
 
-    // 6. 返回加密结果
+    // 4. 返回加密结果
     return {
-      ciphertext: Buffer.from(encryptedData).toString('base64'),
-      iv: Buffer.from(encryptionIV).toString('base64'),
-      tag: ''
+      ciphertext: Buffer.from(encryptedBuffer).toString('base64'),
+      iv: Buffer.from(iv).toString('base64'),
+      tag: '' // AES-GCM 的认证标签包含在 encryptedBuffer 中
     };
   }
 
@@ -236,21 +226,30 @@ export class CryptoUtils {
    * 解密密码条目
    */
   static async decryptPasswordEntry(
-    encryptedData: EncryptedData, 
+    encryptedData: EncryptedData,
     dataKey: CryptoKey
   ): Promise<PasswordData> {
-    // 1. 解密数据
-    const decryptedData = await crypto.subtle.decrypt(
-      {
-        name: 'AES-GCM',
-        iv: Buffer.from(encryptedData.iv, 'base64')
-      },
-      dataKey,
-      Buffer.from(encryptedData.ciphertext, 'base64')
-    );
+    try {
+      // 1. 解码加密数据和 IV
+      const encryptedBuffer = Buffer.from(encryptedData.ciphertext, 'base64');
+      const iv = Buffer.from(encryptedData.iv, 'base64');
 
-    // 2. 解析数据
-    const jsonData = new TextDecoder().decode(decryptedData);
-    return JSON.parse(jsonData) as PasswordData;
+      // 2. 解密数据
+      const decryptedBuffer = await crypto.subtle.decrypt(
+        {
+          name: 'AES-GCM',
+          iv
+        },
+        dataKey,
+        encryptedBuffer
+      );
+
+      // 3. 解析解密后的数据
+      const decryptedText = new TextDecoder().decode(decryptedBuffer);
+      return JSON.parse(decryptedText);
+    } catch (error) {
+      console.error('解密失败:', error);
+      throw new Error('解密失败');
+    }
   }
 } 

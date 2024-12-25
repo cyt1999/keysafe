@@ -125,7 +125,7 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
       const decryptedPasswords = await Promise.all(
         encryptedEntries.map(async (entry: any) => {
           const decryptedData = await CryptoUtils.decryptPasswordEntry(
-            JSON.parse(entry.encryptedData),
+            entry.encryptedData,
             session.dataKey
           );
           return {
@@ -159,7 +159,7 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
       }
 
       // 准备密码数据
-      const passwordData: Omit<PasswordData, 'randomIV'> = {
+      const passwordData: PasswordData = {
         title: values.title,
         username: values.username,
         password: values.password,
@@ -174,7 +174,7 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
       );
 
       if (editingPassword) {
-        // 更新密���条目
+        // 更新密码条目
         const response = await fetch('/api/passwords/update', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },

@@ -15,12 +15,22 @@ export async function GET(request: Request) {
       );
     }
 
+    // 获取用户
+    const user = await prisma.user.findUnique({
+      where: { walletAddress: walletAddress.toLowerCase() }
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: '用户不存在' },
+        { status: 404 }
+      );
+    }
+
     // 获取用户的所有密码条目
     const passwordEntries = await prisma.passwordEntry.findMany({
       where: {
-        user: {
-          walletAddress: walletAddress.toLowerCase()
-        }
+        userId: user.id
       },
       select: {
         id: true,
@@ -34,15 +44,15 @@ export async function GET(request: Request) {
       }
     });
 
-    // 将 encryptedData 从 JSON 字符串转换为对象
-    const formattedEntries = passwordEntries.map(entry => ({
+    // 转换为前端需要的格式
+    const formattedEntries = passwordEntries.map((entry: any) => ({
       ...entry,
       encryptedData: JSON.parse(entry.encryptedData)
     }));
 
     return NextResponse.json(formattedEntries);
   } catch (error) {
-    console.error('获���密码列表失败:', error);
+    console.error('获取密码列表失败:', error);
     return NextResponse.json(
       { error: '获取密码列表失败' },
       { status: 500 }

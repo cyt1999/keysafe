@@ -67,7 +67,7 @@ enum CidStatus {
 
 model PasswordEntry {
   id          String    @id @default(cuid())
-  encryptedData String  // JSON string of EncryptedData (包含 ciphertext、iv、tag)
+  encryptedData String  // 加密后的密码数据
   
   // 关联
   userId      String
