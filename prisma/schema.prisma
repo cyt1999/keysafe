@@ -21,13 +21,14 @@ model User {
   preferences   Json?     // 用户偏好设置
   
   // 验证相关
-  verificationString String    // 加密的验证字符串
-  lastLoginAt       DateTime?  // 最后登录时间
+  verificationData String    // JSON 字符串，包含加密的验证字符串和 IV
+  salt            String    // PBKDF2 盐值
+  lastLoginAt     DateTime?  // 最后登录时间
   
   // 关联
   dataCids       DataCid[]
-  passwords     PasswordEntry[]
-  passwordSync  PasswordSync?
+  passwords      PasswordEntry[]
+  passwordSync   PasswordSync?
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -97,3 +98,4 @@ model PasswordSync {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }
+

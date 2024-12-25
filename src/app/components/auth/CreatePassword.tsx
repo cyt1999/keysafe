@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Form, Input, Button, Typography, Space, message } from 'antd';
+import { Form, Input, Button, Typography, Space, ConfigProvider, theme, App } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
 import { useWallet } from '../../hooks/useWallet';
 import { CryptoUtils } from '@/utils/cryptoUtils';
 import { SessionUtils } from '@/utils/sessionUtils';
+import { PasswordManager } from '@/utils/passwordManager';
 
 const { Title, Text } = Typography;
 
@@ -13,10 +14,11 @@ interface CreatePasswordProps {
   onAuthentication: (authenticated: boolean) => void;
 }
 
-export default function CreatePassword({ onAuthentication }: CreatePasswordProps) {
+function CreatePasswordContent({ onAuthentication }: CreatePasswordProps) {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const { address, provider } = useWallet();
+  const { message } = App.useApp();
 
   const handleSubmit = async (values: { password: string; confirmPassword: string }) => {
     if (!address || !provider) {
@@ -28,33 +30,49 @@ export default function CreatePassword({ onAuthentication }: CreatePasswordProps
       setLoading(true);
 
       // 获取钱包签名
-      const message = `PassKey Authentication\nAddress: ${address}`;
+      const messageText = `PassKey Authentication\nAddress: ${address}`;
       const signer = await provider.getSigner();
-      const signature = await signer.signMessage(message);
+      const signature = await signer.signMessage(messageText);
 
       // 生成主密钥
-      const masterKey = await CryptoUtils.generateMasterKey(values.password);
+      const { masterKey, salt } = await CryptoUtils.generateMasterKey(values.password);
       
-      // 生成加密密钥
-      await CryptoUtils.deriveEncryptionKey(signature, masterKey);
+      // 生成验证数据
+      const encryptedVerification = await CryptoUtils.generateVerificationData(masterKey);
 
-      // 创建验证字符串
-      const verificationString = await CryptoUtils.createVerificationString(signature, masterKey);
+      // 生成数据加密密钥
+      const dataKey = await CryptoUtils.deriveDataKey(masterKey, signature);
 
       // 保存会话数据
-      SessionUtils.createSession(address, masterKey);
+      await SessionUtils.createSession(address, dataKey);
+
+      // 调试日志
+      console.log('Sending to server:', {
+        walletAddress: address.toLowerCase(),
+        ciphertext: encryptedVerification.ciphertext,
+        iv: encryptedVerification.iv,
+        salt: Buffer.from(salt).toString('base64')
+      });
 
       // 保存验证数据
-      await fetch('/api/auth/create', {
+      const response = await fetch('/api/auth/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          walletAddress: address,
-          verificationString,
+          walletAddress: address.toLowerCase(),
+          ciphertext: encryptedVerification.ciphertext,
+          iv: encryptedVerification.iv,
+          salt: Buffer.from(salt).toString('base64')
         }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('API Error:', errorData);
+        throw new Error(errorData.error || '设置主密码失败');
+      }
 
       message.success('主密码设置成功');
       onAuthentication(true);
@@ -80,7 +98,7 @@ export default function CreatePassword({ onAuthentication }: CreatePasswordProps
           <Title level={2}>设置主密码</Title>
           <Text>
             请设置一个安全的主密码，它将用于加密您的所有数据。
-            请确保记住这个密码，因为它无法找回。
+            请确保记住个密码，因为它无法找回。
           </Text>
         </div>
 
@@ -95,7 +113,7 @@ export default function CreatePassword({ onAuthentication }: CreatePasswordProps
             label="主密码"
             rules={[
               { required: true, message: '请输入主密码' },
-              { min: 8, message: '密码长度至少为8位' },
+              { min: 8, message: '密码长度少为8位' },
               {
                 pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
                 message: '密码必须包含大小写字母和数字'
@@ -143,5 +161,19 @@ export default function CreatePassword({ onAuthentication }: CreatePasswordProps
         </Form>
       </Space>
     </div>
+  );
+}
+
+export default function CreatePassword(props: CreatePasswordProps) {
+  return (
+    <App>
+      <ConfigProvider
+        theme={{
+          algorithm: theme.darkAlgorithm,
+        }}
+      >
+        <CreatePasswordContent {...props} />
+      </ConfigProvider>
+    </App>
   );
 } 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Form, Input, Button, Typography, Space, message } from 'antd';
+import { Form, Input, Button, Typography, Space, App, ConfigProvider, theme } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
 import { useWallet } from '../../hooks/useWallet';
 import { CryptoUtils } from '@/utils/cryptoUtils';
@@ -13,10 +13,11 @@ interface VerifyPasswordProps {
   onAuthentication: (authenticated: boolean) => void;
 }
 
-export default function VerifyPassword({ onAuthentication }: VerifyPasswordProps) {
+function VerifyPasswordContent({ onAuthentication }: VerifyPasswordProps) {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const { address, provider } = useWallet();
+  const { message } = App.useApp();
 
   const handleSubmit = async (values: { password: string }) => {
     if (!address || !provider) {
@@ -27,36 +28,35 @@ export default function VerifyPassword({ onAuthentication }: VerifyPasswordProps
     try {
       setLoading(true);
 
+      // 获取验证数据
+      const response = await fetch(`/api/auth/verify?address=${address.toLowerCase()}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '获取验证数据失败');
+      }
+      const { encryptedVerification, salt } = await response.json();
+
       // 获取钱包签名
       const messageText = `PassKey Authentication\nAddress: ${address}`;
       const signer = await provider.getSigner();
       const signature = await signer.signMessage(messageText);
 
-      // 生成主密钥
-      const masterKey = await CryptoUtils.generateMasterKey(values.password);
+      // 验证密码并获取主密钥
+      const masterKey = await CryptoUtils.verifyPassword(
+        values.password,
+        Buffer.from(salt, 'base64'),
+        {
+          ciphertext: encryptedVerification.ciphertext,
+          iv: encryptedVerification.iv,
+          tag: encryptedVerification.tag || ''
+        }
+      );
+
+      // 生成数据加密密钥
+      const dataKey = await CryptoUtils.deriveDataKey(masterKey, signature);
       
-      // 生成加密密钥
-      await CryptoUtils.deriveEncryptionKey(signature, masterKey);
-
       // 保存会话数据
-      SessionUtils.createSession(address, masterKey);
-
-      // 验证密码
-      const response = await fetch('/api/auth/verify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          walletAddress: address,
-          signature,
-          masterKey: masterKey.toString('hex'),
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('验证失败');
-      }
+      await SessionUtils.createSession(address, dataKey);
 
       message.success('验证成功');
       onAuthentication(true);
@@ -117,5 +117,19 @@ export default function VerifyPassword({ onAuthentication }: VerifyPasswordProps
         </Form>
       </Space>
     </div>
+  );
+}
+
+export default function VerifyPassword(props: VerifyPasswordProps) {
+  return (
+    <App>
+      <ConfigProvider
+        theme={{
+          algorithm: theme.darkAlgorithm,
+        }}
+      >
+        <VerifyPasswordContent {...props} />
+      </ConfigProvider>
+    </App>
   );
 } 

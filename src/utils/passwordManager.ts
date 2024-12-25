@@ -1,26 +1,36 @@
+import { PasswordEntry } from './types';
 import { CryptoUtils } from './cryptoUtils';
-import { PasswordEntry, EncryptedData } from './types';
-import { PrismaClient } from '@prisma/client';
+import { SessionUtils } from './sessionUtils';
 
-/**
- * 密码管理器类
- * 负责密码的加密存储和检索
- */
 export class PasswordManager {
+  private address: string;
   private encryptionKey: CryptoKey | null = null;
-  private prisma: PrismaClient;
-  private userAddress: string;
 
-  constructor(userAddress: string) {
-    this.userAddress = userAddress;
-    this.prisma = new PrismaClient();
+  constructor(address: string) {
+    this.address = address.toLowerCase();
+    // 从会话中获取加密密钥
+    const session = SessionUtils.getSession();
+    if (session?.masterKey && session?.signature) {
+      CryptoUtils.deriveEncryptionKey(session.signature, session.masterKey)
+        .then(key => {
+          this.encryptionKey = key;
+        })
+        .catch(error => {
+          console.error('获取加密密钥失败:', error);
+          throw error;
+        });
+    }
   }
 
-  /**
-   * 设置加密密钥
-   */
-  async setEncryptionKey(walletSignature: string, masterKey: Buffer): Promise<void> {
-    this.encryptionKey = await CryptoUtils.deriveEncryptionKey(walletSignature, masterKey);
+  // 不再需要单独设置加密密钥的方法，因为在构造函数中已经处理了
+  private async ensureEncryptionKey(): Promise<void> {
+    if (!this.encryptionKey) {
+      const session = SessionUtils.getSession();
+      if (!session?.masterKey || !session?.signature) {
+        throw new Error('未找到会话数据，请重新登录');
+      }
+      this.encryptionKey = await CryptoUtils.deriveEncryptionKey(session.signature, session.masterKey);
+    }
   }
 
   /**
@@ -42,7 +52,7 @@ export class PasswordManager {
       await this.prisma.passwordEntry.create({
         data: {
           id: entry.id,
-          userId: this.userAddress,
+          userId: this.address,
           encryptedData: encryptedEntry.ciphertext,
           iv: encryptedEntry.iv,
           authTag: encryptedEntry.tag,
@@ -67,7 +77,7 @@ export class PasswordManager {
       // 从数据库获取所有条目
       const entries = await this.prisma.passwordEntry.findMany({
         where: {
-          userId: this.userAddress
+          userId: this.address
         }
       });
 
@@ -112,7 +122,7 @@ export class PasswordManager {
       await this.prisma.passwordEntry.update({
         where: {
           id: entry.id,
-          userId: this.userAddress
+          userId: this.address
         },
         data: {
           encryptedData: encryptedEntry.ciphertext,
@@ -128,14 +138,14 @@ export class PasswordManager {
   }
 
   /**
-   * 删除密码条目
+   * 删除密��条目
    */
   async deleteEntry(id: string): Promise<void> {
     try {
       await this.prisma.passwordEntry.delete({
         where: {
           id: id,
-          userId: this.userAddress
+          userId: this.address
         }
       });
     } catch (error) {
@@ -151,7 +161,7 @@ export class PasswordManager {
     try {
       await this.prisma.passwordEntry.deleteMany({
         where: {
-          userId: this.userAddress
+          userId: this.address
         }
       });
     } catch (error) {
