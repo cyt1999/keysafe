@@ -13,6 +13,7 @@
     "@prisma/client": "^6.1.0",
     "@types/antd": "^1.0.4",
     "antd": "^5.22.5",
+    "critters": "^0.0.16",
     "ethers": "^6.13.4",
     "next": "15.1.1",
     "pinata-web3": "^0.5.3",

@@ -26,6 +26,8 @@ model User {
   
   // 关联
   dataCids       DataCid[]
+  passwords     PasswordEntry[]
+  passwordSync  PasswordSync?
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -60,4 +62,38 @@ enum CidStatus {
   ACTIVE
   ARCHIVED
   DELETED
+}
+
+model PasswordEntry {
+  id          String    @id @default(cuid())
+  encryptedData String  // 加密后的完整数据（包含title、username、password、website）
+  
+  // 加密相关字段
+  iv          String    // 初始化向量
+  authTag     String    // 认证标签
+  
+  // 关联
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  
+  // 元数据
+  version     Int       @default(1)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model PasswordSync {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id])
+  lastSyncedAt    DateTime  // 最后同步到IPFS的时间
+  lastSyncedCid   String?   // 最后同步的IPFS CID
+  syncStatus      String    @default("PENDING") // PENDING, SYNCING, COMPLETED, FAILED
+  retryCount      Int       @default(0)
+  lastError       String?   // 最后一次同步错误信息
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
