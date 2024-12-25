@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer';
-import { EncryptedData } from './types';
+import { EncryptedData, PasswordData } from './types';
 
 export class CryptoUtils {
   private static readonly SALT_LENGTH = 32;
@@ -150,7 +150,7 @@ export class CryptoUtils {
   }
 
   /**
-   * 加密数据
+   * 加���数据
    */
   static async encrypt(data: string, key: CryptoKey): Promise<EncryptedData> {
     const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -189,5 +189,68 @@ export class CryptoUtils {
     );
 
     return new TextDecoder().decode(decryptedData);
+  }
+
+  /**
+   * 加密密码条目
+   * 将用户数据和随机值打包在一起加密
+   */
+  static async encryptPasswordEntry(
+    data: Omit<PasswordData, 'randomIV'>, 
+    dataKey: CryptoKey
+  ): Promise<EncryptedData> {
+    // 1. 生成随机 IV 作为数据的一部分
+    const randomIV = crypto.getRandomValues(new Uint8Array(16));
+    
+    // 2. 构造完整的数据对象
+    const fullData: PasswordData = {
+      ...data,
+      randomIV: Buffer.from(randomIV).toString('base64')
+    };
+    
+    // 3. 将整个对象序列化
+    const jsonData = JSON.stringify(fullData);
+    
+    // 4. 生成加密用的 IV
+    const encryptionIV = crypto.getRandomValues(new Uint8Array(12));
+    
+    // 5. 加密整个数据
+    const encryptedData = await crypto.subtle.encrypt(
+      {
+        name: 'AES-GCM',
+        iv: encryptionIV
+      },
+      dataKey,
+      new TextEncoder().encode(jsonData)
+    );
+
+    // 6. 返回加密结果
+    return {
+      ciphertext: Buffer.from(encryptedData).toString('base64'),
+      iv: Buffer.from(encryptionIV).toString('base64'),
+      tag: ''
+    };
+  }
+
+  /**
+   * 解密密码条目
+   */
+  static async decryptPasswordEntry(
+    encryptedData: EncryptedData, 
+    dataKey: CryptoKey
+  ): Promise<PasswordData> {
+    // 1. 解密数据
+    const decryptedData = await crypto.subtle.decrypt(
+      {
+        name: 'AES-GCM',
+        iv: Buffer.from(encryptedData.iv, 'base64')
+      },
+      dataKey,
+      Buffer.from(encryptedData.ciphertext, 'base64')
+    );
+
+    // 2. 解析数据
+    const jsonData = new TextDecoder().decode(decryptedData);
+    return JSON.parse(jsonData) as PasswordData;
   }
 } 

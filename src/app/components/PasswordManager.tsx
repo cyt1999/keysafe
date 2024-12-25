@@ -1,20 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Layout, Button, Table, Modal, Form, Input, Typography, Space, Card, Tag, message, App } from 'antd';
+import { Layout, Button, Table, Modal, Form, Input, Typography, Space, Card, Tag, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, WalletOutlined, EditOutlined, DeleteOutlined, LockOutlined, GlobalOutlined, UserOutlined } from '@ant-design/icons';
 import { ConfigProvider, theme } from 'antd';
-import '../styles/password-manager.css';
 import { useWallet } from '../hooks/useWallet';
-import { getNetworkInfo } from '../config/networks';
-import { PasswordManager as PasswordManagerClass } from '@/utils/passwordManager';
-import { PasswordEntry } from '@/utils/types';
+import { PasswordEntry, PasswordData } from '@/utils/types';
+import { CryptoUtils } from '@/utils/cryptoUtils';
 import { SessionUtils } from '@/utils/sessionUtils';
-import { JsonRpcSigner } from 'ethers';
+import CreatePassword from './auth/CreatePassword';
+import VerifyPassword from './auth/VerifyPassword';
 
 const { Header, Content } = Layout;
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { Search } = Input;
 
 interface PasswordManagerProps {
@@ -25,88 +24,215 @@ interface PasswordManagerProps {
 }
 
 export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout = () => {}, customContent }: PasswordManagerProps) {
-  const [passwordManager, setPasswordManager] = useState<PasswordManagerClass | null>(null);
+  const [messageApi, contextHolder] = message.useMessage();
   const [passwords, setPasswords] = useState<PasswordEntry[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingPassword, setEditingPassword] = useState<PasswordEntry | null>(null);
   const [form] = Form.useForm();
-  const { address, connect, disconnect, provider } = useWallet();
+  const { address, connect, disconnect } = useWallet();
   const [searchText, setSearchText] = useState('');
-  const { message } = App.useApp();
+  const [isUserExist, setIsUserExist] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // 初始化密码管理器
+  // 监听钱包连接状态
   useEffect(() => {
-    if (address && isAuthenticated && provider) {
-      const manager = new PasswordManagerClass(address);
-      setPasswordManager(manager);
-
-      // 从会话中获取主密钥
-      const session = SessionUtils.getSession();
-      if (session?.masterKey && session?.signature) {
-        // 直接加载密码列表
-        loadPasswords(manager);
-      } else {
-        console.error('会话数据不完整');
-        message.error('会话数据不完整，请重新登录');
-        onLogout();
-      }
+    if (address) {
+      console.log('钱包已连接:', address);
+      onWalletConnection(true, address);
     }
-    return () => {
-      if (passwordManager) {
-        passwordManager.disconnect();
+  }, [address]);
+
+  // 检查用户是否存在
+  useEffect(() => {
+    const checkUser = async () => {
+      if (!address) {
+        setIsUserExist(null);
+        return;
+      }
+
+      try {
+        console.log('正在检查用户状态:', address);
+        setIsLoading(true);
+        const response = await fetch(`/api/auth/verify?address=${address.toLowerCase()}`);
+        console.log('用户状态检查响应:', response.status);
+        
+        if (response.ok) {
+          console.log('用户存在');
+          setIsUserExist(true);
+        } else if (response.status === 404) {
+          console.log('用户不存在');
+          setIsUserExist(false);
+        } else {
+          throw new Error('检查用户状态失败');
+        }
+      } catch (error) {
+        console.error('检查用户状态失败:', error);
+        messageApi.error('检查用户状态失败');
+      } finally {
+        setIsLoading(false);
       }
     };
-  }, [address, isAuthenticated, provider]);
+
+    if (address && !isAuthenticated) {
+      console.log('触发用户状态检查:', { address, isAuthenticated });
+      checkUser();
+    }
+  }, [address, isAuthenticated]);
+
+  // 初始化并加载密码列表
+  useEffect(() => {
+    const initializePasswords = async () => {
+      if (address && isAuthenticated) {
+        try {
+          // 从会话中获取数据密钥
+          const session = await SessionUtils.getSession();
+          if (session?.dataKey) {
+            // 加载密码列表
+            await loadPasswords();
+          } else {
+            console.error('会话数据不完整');
+            messageApi.error('会话数据不完整，请重新登录');
+            onLogout();
+          }
+        } catch (error) {
+          console.error('初始化密码列表失败:', error);
+          messageApi.error('初始化密码列表失败');
+          onLogout();
+        }
+      }
+    };
+
+    initializePasswords();
+  }, [address, isAuthenticated]);
 
   // 加载密码列表
-  const loadPasswords = async (manager: PasswordManagerClass) => {
+  const loadPasswords = async () => {
+    if (!address) return;
+
     try {
-      const entries = await manager.getAllEntries();
-      setPasswords(entries);
+      const response = await fetch(`/api/passwords/list?address=${address.toLowerCase()}`);
+      if (!response.ok) {
+        throw new Error('获取密码列表失败');
+      }
+
+      const encryptedEntries = await response.json();
+      const session = await SessionUtils.getSession();
+      if (!session?.dataKey) {
+        throw new Error('未找到数据密钥');
+      }
+
+      // 解密所有密码条目
+      const decryptedPasswords = await Promise.all(
+        encryptedEntries.map(async (entry: any) => {
+          const decryptedData = await CryptoUtils.decryptPasswordEntry(
+            JSON.parse(entry.encryptedData),
+            session.dataKey
+          );
+          return {
+            id: entry.id,
+            title: decryptedData.title,
+            username: decryptedData.username,
+            password: decryptedData.password,
+            website: decryptedData.website,
+            notes: decryptedData.notes,
+            createdAt: new Date(entry.createdAt),
+            updatedAt: new Date(entry.updatedAt)
+          } as PasswordEntry;
+        })
+      );
+
+      setPasswords(decryptedPasswords);
     } catch (error) {
       console.error('加载密码失败:', error);
-      message.error('加载密码失败');
+      messageApi.error('加载密码失败');
     }
   };
 
   // 处理表单提交
   const handleSubmit = async (values: any) => {
-    if (!passwordManager) return;
+    if (!address) return;
 
     try {
-      const entry: PasswordEntry = {
-        id: editingPassword?.id || crypto.randomUUID(),
-        ...values,
-      };
-
-      if (editingPassword) {
-        await passwordManager.updateEntry(entry);
-      } else {
-        await passwordManager.saveEntry(entry);
+      const session = await SessionUtils.getSession();
+      if (!session?.dataKey) {
+        throw new Error('未找到数据密钥');
       }
 
-      await loadPasswords(passwordManager);
+      // 准备密码数据
+      const passwordData: Omit<PasswordData, 'randomIV'> = {
+        title: values.title,
+        username: values.username,
+        password: values.password,
+        website: values.website,
+        notes: values.notes
+      };
+
+      // 加密密码数据
+      const encryptedData = await CryptoUtils.encryptPasswordEntry(
+        passwordData,
+        session.dataKey
+      );
+
+      if (editingPassword) {
+        // 更新密���条目
+        const response = await fetch('/api/passwords/update', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: editingPassword.id,
+            encryptedData,
+            walletAddress: address
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('更新密码失败');
+        }
+      } else {
+        // 创建新密码条目
+        const response = await fetch('/api/passwords/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            encryptedData,
+            walletAddress: address
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('创建密码失败');
+        }
+      }
+
+      await loadPasswords();
       setIsModalVisible(false);
       form.resetFields();
       setEditingPassword(null);
-      message.success(editingPassword ? '密码已更新' : '密码已保存');
+      messageApi.success(editingPassword ? '密码已更新' : '密码已保存');
     } catch (error) {
       console.error('保存密码失败:', error);
-      message.error('保存密码失败');
+      messageApi.error('保存密码失败');
     }
   };
 
   // 处理删除密码
   const handleDelete = async (id: string) => {
-    if (!passwordManager) return;
+    if (!address) return;
 
     try {
-      await passwordManager.deleteEntry(id);
-      await loadPasswords(passwordManager);
-      message.success('密码已删除');
+      const response = await fetch(`/api/passwords/delete?id=${id}&address=${address.toLowerCase()}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('删除密码失败');
+      }
+
+      await loadPasswords();
+      messageApi.success('密码已删除');
     } catch (error) {
       console.error('删除密码失败:', error);
-      message.error('删除密码失败');
+      messageApi.error('删除密码失败');
     }
   };
 
@@ -115,6 +241,14 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
     setEditingPassword(record);
     form.setFieldsValue(record);
     setIsModalVisible(true);
+  };
+
+  // 处理认证成功
+  const handleAuthentication = (success: boolean) => {
+    console.log('认证结果:', { success, address });
+    if (success) {
+      onWalletConnection(true, address!);
+    }
   };
 
   // 表格列定义
@@ -161,8 +295,30 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
     },
   ];
 
+  // 渲染认证组件
+  const renderAuthComponent = () => {
+    if (!address) {
+      return null;
+    }
+
+    if (isLoading) {
+      return <div>正在检查用户状态...</div>;
+    }
+
+    if (isUserExist === null) {
+      return <div>正在加载...</div>;
+    }
+
+    return isUserExist ? (
+      <VerifyPassword onAuthentication={handleAuthentication} />
+    ) : (
+      <CreatePassword onAuthentication={handleAuthentication} />
+    );
+  };
+
   return (
-    <App>
+    <>
+      {contextHolder}
       <ConfigProvider
         theme={{
           algorithm: theme.darkAlgorithm,
@@ -186,6 +342,7 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
                     type="text"
                     onClick={() => {
                       disconnect();
+                      setIsUserExist(null);
                       if (onLogout) onLogout();
                     }}
                   >
@@ -200,7 +357,9 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
             </Space>
           </Header>
           <Content className="content">
-            {customContent || (
+            {address && !isAuthenticated ? (
+              renderAuthComponent()
+            ) : customContent || (
               <Card>
                 <div className="toolbar">
                   <Search
@@ -277,6 +436,6 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
           </Content>
         </Layout>
       </ConfigProvider>
-    </App>
+    </>
   );
 }

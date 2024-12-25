@@ -17,7 +17,11 @@ export async function GET(request: Request) {
 
     // 获取用户
     const user = await prisma.user.findUnique({
-      where: { walletAddress: address.toLowerCase() }
+      where: { walletAddress: address.toLowerCase() },
+      select: {
+        masterKeyHash: true,
+        salt: true
+      }
     });
 
     if (!user) {

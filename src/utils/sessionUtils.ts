@@ -1,59 +1,61 @@
-const SESSION_KEY = 'keysafe_session';
-
-interface SessionData {
-  address: string;
-  encryptionKey: CryptoKey;
-  timestamp: number;
-}
+import { SessionData } from './types';
 
 export class SessionUtils {
-  /**
-   * 创建会话
-   */
-  static async createSession(address: string, encryptionKey: CryptoKey): Promise<void> {
-    const sessionData: SessionData = {
-      address: address.toLowerCase(),
-      encryptionKey,
-      timestamp: Date.now()
-    };
+  private static readonly SESSION_KEY = 'keysafe_session';
 
-    // 导出密钥
-    const keyBuffer = await crypto.subtle.exportKey('raw', encryptionKey);
-    
-    // 保存会话数据
-    localStorage.setItem(SESSION_KEY, JSON.stringify({
-      address: sessionData.address,
-      encryptionKey: Buffer.from(keyBuffer).toString('base64'),
-      timestamp: sessionData.timestamp
-    }));
+  /**
+   * 创建新会话
+   */
+  static async createSession(address: string, dataKey: CryptoKey): Promise<void> {
+    try {
+      const sessionData: SessionData = {
+        address: address.toLowerCase(),
+        dataKey
+      };
+
+      // 导出密钥为原始字节数组
+      const exportedKey = await crypto.subtle.exportKey('raw', dataKey);
+      const keyArray = Array.from(new Uint8Array(exportedKey));
+
+      // 存储会话数据
+      sessionStorage.setItem(this.SESSION_KEY, JSON.stringify({
+        address: sessionData.address,
+        dataKey: keyArray
+      }));
+    } catch (error) {
+      console.error('创建会话失败:', error);
+      throw new Error('创建会话失败');
+    }
   }
 
   /**
-   * 获取会话数据
+   * 获取当前会话
    */
   static async getSession(): Promise<SessionData | null> {
-    const data = localStorage.getItem(SESSION_KEY);
+    const data = sessionStorage.getItem(this.SESSION_KEY);
     if (!data) return null;
 
     try {
-      const parsed = JSON.parse(data);
-      const keyBuffer = Buffer.from(parsed.encryptionKey, 'base64');
+      const { address, dataKey } = JSON.parse(data);
       
-      // 从导出的密钥数据重新创建 CryptoKey 对象
-      const encryptionKey = await crypto.subtle.importKey(
+      // 将数组转换回 Uint8Array
+      const keyData = new Uint8Array(dataKey);
+      
+      // 导入密钥
+      const importedKey = await crypto.subtle.importKey(
         'raw',
-        keyBuffer,
-        'AES-GCM',
+        keyData,
+        { name: 'AES-GCM', length: 256 },
         true,
         ['encrypt', 'decrypt']
       );
 
       return {
-        address: parsed.address,
-        encryptionKey,
-        timestamp: parsed.timestamp
+        address,
+        dataKey: importedKey
       };
-    } catch {
+    } catch (error) {
+      console.error('解析会话数据失败:', error);
       return null;
     }
   }
@@ -61,25 +63,20 @@ export class SessionUtils {
   /**
    * 检查会话是否有效
    */
-  static async isValidSession(address: string): Promise<boolean> {
-    const session = await this.getSession();
-    if (!session) return false;
-
-    const isValid = 
-      session.address === address.toLowerCase() &&
-      Date.now() - session.timestamp < 24 * 60 * 60 * 1000; // 24小时有效期
-
-    if (!isValid) {
-      this.clearSession();
+  static async isValidSession(): Promise<boolean> {
+    try {
+      const session = await this.getSession();
+      return session !== null;
+    } catch (error) {
+      console.error('检查会话状态失败:', error);
+      return false;
     }
-
-    return isValid;
   }
 
   /**
    * 清除会话
    */
   static clearSession(): void {
-    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(this.SESSION_KEY);
   }
 } 
