@@ -161,7 +161,7 @@ export default function CreatePassword(props: CreatePasswordProps) {
     <App>
       <ConfigProvider
         theme={{
-          algorithm: theme.darkAlgorithm,
+          algorithm: theme.defaultAlgorithm,
         }}
       >
         <CreatePasswordContent {...props} />

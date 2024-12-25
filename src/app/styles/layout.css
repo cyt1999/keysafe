@@ -1,56 +1,136 @@
-/* 自定义滚动条样式 */
+/* 全局样式变量 */
+:root {
+  /* 主色调 */
+  --color-primary: #00B96B;
+  --color-primary-hover: #00D6A2;
+  --color-primary-active: #00A15C;
+  --color-primary-light: rgba(0, 185, 107, 0.08);
+  --color-primary-border: rgba(0, 185, 107, 0.15);
+  
+  /* 文字颜色 */
+  --color-text-primary: #2C3E50;
+  --color-text-secondary: #00854D;
+  --color-text-light: #FFFFFF;
+  
+  /* 背景颜色 */
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #FCFCFC;
+  --color-bg-mask: rgba(0, 185, 107, 0.04);
+  
+  /* 边框颜色 */
+  --color-border: #D9D9D9;
+  --color-border-hover: #BFBFBF;
+  
+  /* 阴影 */
+  --shadow-sm: 0 4px 12px rgba(0, 185, 107, 0.06);
+  --shadow-md: 0 8px 24px rgba(0, 185, 107, 0.08);
+  --shadow-lg: 0 20px 40px rgba(0, 185, 107, 0.12);
+  
+  /* 圆角 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  
+  /* 间距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* 动画 */
+  --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* 字体 */
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 20px;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 600;
+}
+
+/* 基础样式重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background: var(--color-bg-secondary);
+}
+
+/* 滚动条样式 */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+  background: var(--color-bg-secondary);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #00B96B;
-  border-radius: 4px;
-  opacity: 0.8;
+  background: linear-gradient(45deg, var(--color-primary), var(--color-primary-hover));
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #008F52;
+  background: linear-gradient(45deg, var(--color-primary-active), var(--color-primary));
 }
 
 /* 布局样式 */
 .layout {
   min-height: 100vh;
-  background: #FFFFFF;
+  background: var(--color-bg-secondary);
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 24px;
-  background: #FFFFFF;
-  box-shadow: 0 4px 15px rgba(0, 185, 107, 0.05);
-  backdrop-filter: blur(10px);
-  position: sticky;
-  top: 0;
-  z-index: 1;
+/* Header样式 */
+.header,
+.ant-layout-header,
+[class*='ant-layout-header'] {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 0 var(--spacing-xl) !important;
+  background: var(--color-bg-primary) !important;
+  box-shadow: var(--shadow-sm) !important;
+  backdrop-filter: blur(20px) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  height: 72px !important;
+  border-bottom: 1px solid var(--color-primary-border) !important;
+  line-height: normal !important;
 }
 
+/* Logo样式 */
 .logo-container {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
 }
 
 .logo-icon {
-  font-size: 24px;
-  color: #00B96B;
+  font-size: var(--font-size-xl);
+  color: var(--color-primary);
+  filter: drop-shadow(0 2px 4px rgba(0, 185, 107, 0.2));
 }
 
+/* 内容区域样式 */
 .content {
-  padding: 24px;
+  padding: var(--spacing-xl);
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
@@ -61,137 +141,348 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: var(--spacing-xl);
+}
+
+/* 搜索框样式 */
+.ant-input-group-wrapper.ant-input-search {
+  width: 240px !important;
+}
+
+.ant-input-wrapper.ant-input-group {
+  display: flex !important;
+}
+
+.ant-input-search .ant-input-affix-wrapper {
+  height: 36px !important;
+  border-radius: var(--radius-md) 0 0 var(--radius-md) !important;
+  background: var(--color-bg-primary) !important;
+  border: 1px solid var(--color-border) !important;
+  border-right: none !important;
+  transition: var(--transition-base);
+  font-size: var(--font-size-base);
+  padding: 0 11px !important;
+}
+
+.ant-input-search .ant-input {
+  height: 34px !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.ant-input-search .ant-input-affix-wrapper:hover {
+  border-color: var(--color-border-hover) !important;
+}
+
+.ant-input-search .ant-input-affix-wrapper-focused {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(0, 185, 107, 0.06) !important;
+}
+
+.ant-input-search .ant-input-group-addon {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.ant-input-search .ant-input-search-button {
+  border-radius: 0 var(--radius-md) var(--radius-md) 0 !important;
+  background: var(--color-primary) !important;
+  border: none !important;
+  height: 36px !important;
+  width: 36px !important;
+  transition: var(--transition-base) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.ant-input-search .ant-input-search-button:hover {
+  background: var(--color-primary-hover) !important;
+  color: #fff !important;
+  transform: none;
+}
+
+.ant-input-search .ant-input-search-button .anticon {
+  color: #fff !important;
 }
 
 /* 卡片样式 */
 .ant-card {
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 185, 107, 0.05);
-  background: #FFFFFF;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-primary-border);
+  transition: var(--transition-base);
 }
 
 .ant-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* 按钮基础样式 */
+.ant-btn {
+  transition: var(--transition-base);
+  font-weight: var(--font-weight-medium);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  height: 36px;
+  border-radius: var(--radius-md);
+  padding: 0 var(--spacing-md);
+  font-size: var(--font-size-base);
+}
+
+/* 主要按钮样式 */
+.ant-btn-primary,
+.ant-btn-variant-solid {
+  background: var(--color-primary) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: none;
+  height: 36px !important;
+  padding: 0 var(--spacing-lg) !important;
+  font-size: var(--font-size-base) !important;
+  line-height: 36px !important;
+}
+
+.ant-btn-primary:not(:disabled):hover,
+.ant-btn-variant-solid:hover {
+  background: var(--color-primary-hover) !important;
+  color: #fff !important;
+  transform: none;
+  box-shadow: none;
+}
+
+/* 次要按钮样式 */
+.ant-btn-default {
+  background: var(--color-primary-light);
+  border: 1px solid var(--color-primary-border);
+  color: var(--color-text-secondary);
+}
+
+.ant-btn-default:hover {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
   transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(0, 185, 107, 0.12);
+}
+
+/* 标签样式 */
+.ant-tag,
+[class*='ant-tag'] {
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  transition: var(--transition-base);
+}
+
+/* 成功状态标签 */
+.ant-tag-success,
+[class*='ant-tag-success'] {
+  color: var(--color-primary) !important;
+  background: var(--color-primary-light) !important;
+  border: 1px solid var(--color-primary-border) !important;
 }
 
 /* 表格样式 */
 .ant-table {
-  background: #FFFFFF;
+  background: transparent;
 }
 
 .ant-table-thead > tr > th {
-  background: rgba(0, 185, 107, 0.03) !important;
-  color: #00B96B !important;
+  background: var(--color-bg-mask) !important;
+  color: var(--color-text-primary) !important;
+  font-weight: var(--font-weight-bold);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 2px solid var(--color-primary-border);
 }
 
 .ant-table-tbody > tr > td {
-  transition: all 0.3s ease;
-  border-bottom: 1px solid #f0f0f0;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-primary-border);
+  transition: var(--transition-base);
+  color: var(--color-text-primary) !important;
 }
 
 .ant-table-tbody > tr:hover > td {
-  background-color: rgba(0, 185, 107, 0.05) !important;
-}
-
-/* 按钮样式 */
-.ant-btn-primary {
-  background: linear-gradient(135deg, #00B96B 0%, #00D6A2 100%);
-  border: none;
-  box-shadow: 0 4px 12px rgba(0, 185, 107, 0.25);
-  border-radius: 8px;
-}
-
-.ant-btn-primary:not(:disabled):hover {
-  background: linear-gradient(45deg, #00B96B, #00D6A2) !important;
-  transform: translateY(-1px);
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 16px rgba(0, 185, 107, 0.3);
-}
-
-/* 输入框样式 */
-.ant-input-affix-wrapper {
-  border-radius: 8px;
-  border: 1px solid #d9d9d9;
-  transition: all 0.3s ease;
-}
-
-.ant-input-affix-wrapper:focus,
-.ant-input-affix-wrapper-focused {
-  box-shadow: 0 0 0 2px rgba(0, 185, 107, 0.15) !important;
-}
-
-/* 搜索框样式 */
-.ant-input-search .ant-input {
-  border-radius: 8px;
-}
-
-.ant-input-search .ant-input:hover,
-.ant-input-search .ant-input:focus {
-  border-color: #00B96B;
-  box-shadow: 0 0 0 2px rgba(0, 185, 107, 0.1);
+  background: var(--color-bg-mask) !important;
 }
 
 /* 模态框样式 */
-.custom-modal .ant-modal-content {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 185, 107, 0.08);
+.ant-modal-content {
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-md) !important;
+  box-shadow: var(--shadow-lg);
+  background: #FFFFFF !important;
+}
+
+.ant-modal-mask {
+  background-color: rgba(0, 0, 0, 0.45) !important;
 }
 
 .ant-modal-header {
-  border-bottom: 1px solid #f0f0f0;
-  padding: 16px 24px;
+  border-bottom: none;
+  padding-bottom: var(--spacing-sm) !important;
+  margin-bottom: 0 !important;
+  background: #FFFFFF !important;
+}
+
+.ant-modal-title {
+  color: var(--color-text-primary) !important;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg) !important;
+  line-height: 1.4 !important;
+}
+
+.ant-modal-body {
+  background: #FFFFFF !important;
+  padding: var(--spacing-sm) 0 !important;
 }
 
 .ant-modal-footer {
-  border-top: 1px solid #f0f0f0;
-  padding: 16px 24px;
+  border-top: none;
+  padding-top: var(--spacing-sm) !important;
+  background: #FFFFFF !important;
+  margin-top: 0 !important;
 }
 
-/* 网络状态样式 */
-.network-status-container {
-  display: flex;
-  align-items: center;
+/* Modal中的按钮样式 */
+.ant-modal-footer .ant-btn {
+  height: 32px !important;
+  padding: 0 var(--spacing-md) !important;
+  font-size: var(--font-size-base) !important;
+  line-height: 30px !important;
 }
 
-/* 钱包按钮样式 */
-.wallet-button {
-  border-radius: 12px;
-  padding: 4px 16px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-weight: 500;
-  font-size: 13px;
-  transition: all 0.3s ease;
+.ant-modal-footer .ant-btn-default {
+  background: #fff !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-primary) !important;
 }
 
-.wallet-button.connected {
-  background: rgba(0, 185, 107, 0.1);
-  border: 1px solid rgba(0, 185, 107, 0.2);
-  color: #00B96B;
+.ant-modal-footer .ant-btn-default:hover {
+  background: #fff !important;
+  border-color: var(--color-border-hover) !important;
+  color: var(--color-text-primary) !important;
+  transform: none;
 }
 
-.wallet-button.disconnected {
-  background: linear-gradient(135deg, #00B96B 0%, #00D6A2 100%);
-  border: none;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 185, 107, 0.25);
+.ant-modal-footer .ant-btn-primary {
+  height: 32px !important;
+  padding: 0 var(--spacing-md) !important;
+  font-size: var(--font-size-base) !important;
+  line-height: 32px !important;
 }
 
-/* 标题样式 */
-.ant-typography {
-  color: #1A1A1A;
+/* 表单样式 */
+.ant-form-item-label > label {
+  color: var(--color-text-primary) !important;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base) !important;
+  height: 26px !important;
+  padding-bottom: 4px !important;
+}
+
+.ant-form-item {
+  color: var(--color-text-primary) !important;
+  margin-bottom: var(--spacing-md) !important;
+}
+
+.ant-form-item:last-child {
+  margin-bottom: 0 !important;
+}
+
+.ant-input,
+.ant-input-password,
+.ant-input-password input,
+.ant-input-affix-wrapper {
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--color-border) !important;
+  transition: var(--transition-base);
+  color: var(--color-text-primary) !important;
+  background: #fff !important;
+  height: 32px !important;
+  font-size: var(--font-size-base) !important;
+}
+
+.ant-input-password .ant-input,
+.ant-input-affix-wrapper .ant-input {
+  border: none !important;
+}
+
+.ant-input:hover,
+.ant-input-password:hover,
+.ant-input-affix-wrapper:hover {
+  border-color: var(--color-border-hover) !important;
+}
+
+.ant-input:focus,
+.ant-input-password-focused,
+.ant-input-affix-wrapper-focused {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(0, 185, 107, 0.06) !important;
+}
+
+.ant-input::placeholder,
+.ant-input-password input::placeholder,
+.ant-input-affix-wrapper input::placeholder {
+  color: rgba(44, 62, 80, 0.45) !important;
+}
+
+/* 输入框图标颜色 */
+.ant-input-prefix {
+  color: var(--color-border) !important;
+}
+
+.ant-input-affix-wrapper:hover .ant-input-prefix {
+  color: var(--color-border-hover) !important;
+}
+
+.ant-input-affix-wrapper-focused .ant-input-prefix {
+  color: var(--color-primary) !important;
+}
+
+.ant-form-item-explain,
+.ant-form-item-extra {
+  color: var(--color-text-primary) !important;
+}
+
+/* 密码输入框的图标颜色 */
+.ant-input-password-icon.anticon {
+  color: var(--color-text-primary) !important;
+}
+
+.ant-input-password-icon.anticon:hover {
+  color: var(--color-primary) !important;
 }
 
 /* 头像样式 */
 .ant-avatar {
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 2px solid var(--color-primary-border);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+  color: var(--color-text-light);
+  font-weight: var(--font-weight-medium);
+}
+
+.ant-input-textarea {
+  height: auto !important;
+  border-radius: var(--radius-md) !important;
+}
+
+.ant-input-textarea textarea.ant-input {
+  height: 64px !important;
+  resize: none;
+  padding: 8px 12px !important;
+  border-radius: var(--radius-md) !important;
 } 

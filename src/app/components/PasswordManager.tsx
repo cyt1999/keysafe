@@ -261,6 +261,8 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
             form.resetFields();
             setEditingPassword(null);
           }}
+          okText="确定"
+          cancelText="取消"
         >
           <PasswordForm
             form={form}

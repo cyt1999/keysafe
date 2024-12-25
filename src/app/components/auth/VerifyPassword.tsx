@@ -121,7 +121,7 @@ export default function VerifyPassword(props: VerifyPasswordProps) {
     <App>
       <ConfigProvider
         theme={{
-          algorithm: theme.darkAlgorithm,
+          algorithm: theme.defaultAlgorithm,
         }}
       >
         <VerifyPasswordContent {...props} />
