@@ -2,8 +2,61 @@
 
 import React from 'react';
 import { createCache, extractStyle, StyleProvider } from '@ant-design/cssinjs';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, theme } from 'antd';
 import { useServerInsertedHTML } from 'next/navigation';
+import '../styles/layout.css';
+
+const themeConfig = {
+  token: {
+    colorPrimary: '#00B96B',
+    colorBgContainer: '#FFFFFF',
+    colorText: '#1A1A1A',
+    colorBgElevated: '#FFFFFF',
+    borderRadius: 8,
+    colorBgLayout: '#FFFFFF',
+    colorBorder: '#f0f0f0',
+    boxShadowSecondary: '0 8px 24px rgba(0, 185, 107, 0.05)',
+  },
+  components: {
+    Button: {
+      colorPrimary: '#00B96B',
+      algorithm: true,
+      borderRadius: 8,
+      controlHeight: 40,
+    },
+    Input: {
+      colorBgContainer: '#FFFFFF',
+      borderRadius: 8,
+      controlHeight: 40,
+    },
+    Select: {
+      colorBgContainer: '#FFFFFF',
+      borderRadius: 8,
+      controlHeight: 40,
+    },
+    Modal: {
+      borderRadiusLG: 16,
+      paddingContentHorizontalLG: 24,
+      paddingMD: 24,
+    },
+    Card: {
+      borderRadiusLG: 16,
+      boxShadowTertiary: '0 8px 24px rgba(0, 185, 107, 0.05)',
+    },
+    Table: {
+      borderRadius: 8,
+      colorBgContainer: '#FFFFFF',
+      fontSize: 14,
+      rowHoverBg: 'rgba(0, 185, 107, 0.05)',
+      headerBg: 'rgba(0, 185, 107, 0.03)',
+      headerColor: '#00B96B',
+    },
+    Avatar: {
+      borderRadius: '50%',
+      containerSize: 32,
+    }
+  },
+};
 
 /**
  * Ant Design 样式注册组件
@@ -28,13 +81,9 @@ export default function AntdRegistry({ children }: { children: React.ReactNode }
   return (
     <StyleProvider cache={cache} hashPriority="high">
       <ConfigProvider
-        wave={{
-          disabled: true // 禁用波纹效果
-        }}
         theme={{
-          token: {
-            colorPrimary: '#00B96B',
-          },
+          ...themeConfig,
+          algorithm: theme.defaultAlgorithm,
         }}
       >
         {children}

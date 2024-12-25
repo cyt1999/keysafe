@@ -1,0 +1,197 @@
+/* 自定义滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #00B96B;
+  border-radius: 4px;
+  opacity: 0.8;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #008F52;
+}
+
+/* 布局样式 */
+.layout {
+  min-height: 100vh;
+  background: #FFFFFF;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  background: #FFFFFF;
+  box-shadow: 0 4px 15px rgba(0, 185, 107, 0.05);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  font-size: 24px;
+  color: #00B96B;
+}
+
+.content {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* 工具栏样式 */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+/* 卡片样式 */
+.ant-card {
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 185, 107, 0.05);
+  background: #FFFFFF;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.ant-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 185, 107, 0.12);
+}
+
+/* 表格样式 */
+.ant-table {
+  background: #FFFFFF;
+}
+
+.ant-table-thead > tr > th {
+  background: rgba(0, 185, 107, 0.03) !important;
+  color: #00B96B !important;
+}
+
+.ant-table-tbody > tr > td {
+  transition: all 0.3s ease;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background-color: rgba(0, 185, 107, 0.05) !important;
+}
+
+/* 按钮样式 */
+.ant-btn-primary {
+  background: linear-gradient(135deg, #00B96B 0%, #00D6A2 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 185, 107, 0.25);
+  border-radius: 8px;
+}
+
+.ant-btn-primary:not(:disabled):hover {
+  background: linear-gradient(45deg, #00B96B, #00D6A2) !important;
+  transform: translateY(-1px);
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 16px rgba(0, 185, 107, 0.3);
+}
+
+/* 输入框样式 */
+.ant-input-affix-wrapper {
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+  transition: all 0.3s ease;
+}
+
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused {
+  box-shadow: 0 0 0 2px rgba(0, 185, 107, 0.15) !important;
+}
+
+/* 搜索框样式 */
+.ant-input-search .ant-input {
+  border-radius: 8px;
+}
+
+.ant-input-search .ant-input:hover,
+.ant-input-search .ant-input:focus {
+  border-color: #00B96B;
+  box-shadow: 0 0 0 2px rgba(0, 185, 107, 0.1);
+}
+
+/* 模态框样式 */
+.custom-modal .ant-modal-content {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 185, 107, 0.08);
+}
+
+.ant-modal-header {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 24px;
+}
+
+.ant-modal-footer {
+  border-top: 1px solid #f0f0f0;
+  padding: 16px 24px;
+}
+
+/* 网络状态样式 */
+.network-status-container {
+  display: flex;
+  align-items: center;
+}
+
+/* 钱包按钮样式 */
+.wallet-button {
+  border-radius: 12px;
+  padding: 4px 16px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  font-size: 13px;
+  transition: all 0.3s ease;
+}
+
+.wallet-button.connected {
+  background: rgba(0, 185, 107, 0.1);
+  border: 1px solid rgba(0, 185, 107, 0.2);
+  color: #00B96B;
+}
+
+.wallet-button.disconnected {
+  background: linear-gradient(135deg, #00B96B 0%, #00D6A2 100%);
+  border: none;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 185, 107, 0.25);
+}
+
+/* 标题样式 */
+.ant-typography {
+  color: #1A1A1A;
+}
+
+/* 头像样式 */
+.ant-avatar {
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+} 
