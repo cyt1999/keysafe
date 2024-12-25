@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  walletAddress String    @unique
+  avatar        String?   // 头像URL
+  nickname      String?
+  preferences   Json?     // 用户偏好设置
+  
+  // 验证相关
+  verificationString String    // 加密的验证字符串
+  lastLoginAt       DateTime?  // 最后登录时间
+  
+  // 关联
+  dataCids       DataCid[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model DataCid {
+  id          String    @id @default(cuid())
+  cid         String    // IPFS CID
+  type        CidType   // 数据类型（密码/笔记等）
+  status      CidStatus @default(ACTIVE)
+  version     Int       @default(1)  // 数据版本
+  
+  // 关联
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([cid])
+}
+
+enum CidType {
+  PASSWORDS
+  NOTES
+  SETTINGS
+  OTHER
+}
+
+enum CidStatus {
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
