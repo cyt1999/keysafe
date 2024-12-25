@@ -27,15 +27,9 @@ export async function GET(request: Request) {
       );
     }
 
-    // 解析验证数据
-    const verificationData = JSON.parse(user.verificationData as string);
-
     // 返回验证数据
     return NextResponse.json({
-      encryptedVerification: {
-        ciphertext: verificationData.ciphertext,
-        iv: verificationData.iv
-      },
+      masterKeyHash: user.masterKeyHash,
       salt: user.salt
     });
   } catch (error) {

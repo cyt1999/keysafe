@@ -7,14 +7,13 @@ export async function POST(request: Request) {
   try {
     const { 
       walletAddress,
-      ciphertext,  // 加密后的验证字符串
-      iv,         // 初始化向量
-      salt        // PBKDF2 盐值
+      masterKeyHash,  // 主密钥哈希
+      salt           // PBKDF2 盐值
     } = await request.json();
 
     // 检查参数
-    if (!walletAddress || !ciphertext || !iv || !salt) {
-      console.error('Missing parameters:', { walletAddress, ciphertext, iv, salt }); // 添加错误日志
+    if (!walletAddress || !masterKeyHash || !salt) {
+      console.error('Missing parameters:', { walletAddress, masterKeyHash, salt });
       return NextResponse.json(
         { error: '缺少必要参数' },
         { status: 400 }
@@ -27,19 +26,13 @@ export async function POST(request: Request) {
         walletAddress: walletAddress.toLowerCase() 
       },
       update: {
-        verificationData: JSON.stringify({
-          ciphertext,
-          iv
-        }),
+        masterKeyHash,
         salt,
         lastLoginAt: new Date()
       },
       create: {
         walletAddress: walletAddress.toLowerCase(),
-        verificationData: JSON.stringify({
-          ciphertext,
-          iv
-        }),
+        masterKeyHash,
         salt,
         preferences: {},
         lastLoginAt: new Date()

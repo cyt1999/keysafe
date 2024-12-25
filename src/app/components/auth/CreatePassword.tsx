@@ -34,27 +34,16 @@ function CreatePasswordContent({ onAuthentication }: CreatePasswordProps) {
       const signer = await provider.getSigner();
       const signature = await signer.signMessage(messageText);
 
-      // 生成主密钥
-      const { masterKey, salt } = await CryptoUtils.generateMasterKey(values.password);
+      // 生成主密钥和主密钥哈希
+      const { masterKey, masterKeyHash, salt } = await CryptoUtils.generateMasterKey(values.password);
       
-      // 生成验证数据
-      const encryptedVerification = await CryptoUtils.generateVerificationData(masterKey);
-
       // 生成数据加密密钥
       const dataKey = await CryptoUtils.deriveDataKey(masterKey, signature);
 
       // 保存会话数据
       await SessionUtils.createSession(address, dataKey);
 
-      // 调试日志
-      console.log('Sending to server:', {
-        walletAddress: address.toLowerCase(),
-        ciphertext: encryptedVerification.ciphertext,
-        iv: encryptedVerification.iv,
-        salt: Buffer.from(salt).toString('base64')
-      });
-
-      // 保存验证数据
+      // 保存验证数据到服务器
       const response = await fetch('/api/auth/create', {
         method: 'POST',
         headers: {
@@ -62,8 +51,7 @@ function CreatePasswordContent({ onAuthentication }: CreatePasswordProps) {
         },
         body: JSON.stringify({
           walletAddress: address.toLowerCase(),
-          ciphertext: encryptedVerification.ciphertext,
-          iv: encryptedVerification.iv,
+          masterKeyHash,
           salt: Buffer.from(salt).toString('base64')
         }),
       });

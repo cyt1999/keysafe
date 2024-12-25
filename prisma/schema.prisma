@@ -20,10 +20,10 @@ model User {
   nickname      String?
   preferences   Json?     // 用户偏好设置
   
-  // 验证相关
-  verificationData String    // JSON 字符串，包含加密的验证字符串和 IV
-  salt            String    // PBKDF2 盐值
-  lastLoginAt     DateTime?  // 最后登录时间
+  // 主密码验证相关
+  masterKeyHash String    // 主密钥哈希，用于验证主密码
+  salt         String    // PBKDF2 盐值
+  lastLoginAt  DateTime?  // 最后登录时间
   
   // 关联
   dataCids       DataCid[]

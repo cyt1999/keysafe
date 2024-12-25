@@ -7,14 +7,15 @@ export class CryptoUtils {
   private static readonly KEY_LENGTH = 32;
 
   /**
-   * 从主密码生成主密钥
+   * 从主密码生成主密钥和主密钥哈希
    */
-  static async generateMasterKey(password: string, salt?: Uint8Array): Promise<{
+  static async generateMasterKey(password: string): Promise<{
     masterKey: CryptoKey;
+    masterKeyHash: string;
     salt: Uint8Array;
   }> {
-    // 如果没有提供盐值，生成随机盐值
-    const useSalt = salt || crypto.getRandomValues(new Uint8Array(this.SALT_LENGTH));
+    // 生成随机盐值
+    const salt = crypto.getRandomValues(new Uint8Array(this.SALT_LENGTH));
     
     // 从密码派生主密钥
     const baseKey = await crypto.subtle.importKey(
@@ -28,7 +29,7 @@ export class CryptoUtils {
     const masterKey = await crypto.subtle.deriveKey(
       {
         name: 'PBKDF2',
-        salt: useSalt,
+        salt: salt,
         iterations: this.ITERATIONS,
         hash: 'SHA-256'
       },
@@ -38,7 +39,69 @@ export class CryptoUtils {
       ['encrypt', 'decrypt']
     );
 
-    return { masterKey, salt: useSalt };
+    // 生成主密钥哈希
+    const masterKeyHash = await this.generateMasterKeyHash(masterKey);
+
+    return { masterKey, masterKeyHash, salt };
+  }
+
+  /**
+   * 验证主密码
+   */
+  static async verifyMasterPassword(
+    password: string,
+    salt: Uint8Array,
+    storedMasterKeyHash: string
+  ): Promise<CryptoKey> {
+    try {
+      // 使用相同的盐值重新生成主密钥
+      const baseKey = await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(password),
+        { name: 'PBKDF2' },
+        false,
+        ['deriveBits', 'deriveKey']
+      );
+
+      const masterKey = await crypto.subtle.deriveKey(
+        {
+          name: 'PBKDF2',
+          salt: salt,
+          iterations: this.ITERATIONS,
+          hash: 'SHA-256'
+        },
+        baseKey,
+        { name: 'AES-GCM', length: 256 },
+        true,
+        ['encrypt', 'decrypt']
+      );
+
+      // 生成主密钥哈希并比对
+      const masterKeyHash = await this.generateMasterKeyHash(masterKey);
+      
+      if (masterKeyHash !== storedMasterKeyHash) {
+        throw new Error('密码错误');
+      }
+
+      return masterKey;
+    } catch (error) {
+      console.error('验证主密码失败:', error);
+      throw new Error('密码错误');
+    }
+  }
+
+  /**
+   * 生成主密钥的哈希值
+   */
+  private static async generateMasterKeyHash(masterKey: CryptoKey): Promise<string> {
+    // 导出主密钥的原始字节
+    const keyBytes = await crypto.subtle.exportKey('raw', masterKey);
+    
+    // 计算哈希值
+    const hashBuffer = await crypto.subtle.digest('SHA-256', keyBytes);
+    
+    // 转换为 base64 字符串
+    return Buffer.from(hashBuffer).toString('base64');
   }
 
   /**
@@ -87,29 +150,6 @@ export class CryptoUtils {
   }
 
   /**
-   * 验证主密码
-   */
-  static async verifyPassword(
-    password: string,
-    salt: Uint8Array,
-    encryptedVerification: EncryptedData,
-  ): Promise<CryptoKey> {
-    try {
-      // 使用相同的盐值重新生成主密钥
-      const { masterKey } = await this.generateMasterKey(password, salt);
-      
-      // 尝试解密验证字符串
-      // 如果密码错误，解密会失败并抛出异常
-      await this.decrypt(encryptedVerification, masterKey);
-      
-      // 如果能成功解密，说明密码正确
-      return masterKey;
-    } catch {
-      throw new Error('密码错误');
-    }
-  }
-
-  /**
    * 加密数据
    */
   static async encrypt(data: string, key: CryptoKey): Promise<EncryptedData> {
@@ -149,19 +189,5 @@ export class CryptoUtils {
     );
 
     return new TextDecoder().decode(decryptedData);
-  }
-
-  /**
-   * 计算主密钥的哈希值
-   */
-  static async generateMasterKeyHash(masterKey: CryptoKey): Promise<string> {
-    // 导出主密钥的原始字节
-    const keyBytes = await crypto.subtle.exportKey('raw', masterKey);
-    
-    // 计算哈希值
-    const hashBuffer = await crypto.subtle.digest('SHA-256', keyBytes);
-    
-    // 转换为 base64 字符串
-    return Buffer.from(hashBuffer).toString('base64');
   }
 } 

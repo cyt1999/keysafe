@@ -34,7 +34,7 @@ function VerifyPasswordContent({ onAuthentication }: VerifyPasswordProps) {
         const errorData = await response.json();
         throw new Error(errorData.error || '获取验证数据失败');
       }
-      const { encryptedVerification, salt } = await response.json();
+      const { masterKeyHash, salt } = await response.json();
 
       // 获取钱包签名
       const messageText = `PassKey Authentication\nAddress: ${address}`;
@@ -42,14 +42,10 @@ function VerifyPasswordContent({ onAuthentication }: VerifyPasswordProps) {
       const signature = await signer.signMessage(messageText);
 
       // 验证密码并获取主密钥
-      const masterKey = await CryptoUtils.verifyPassword(
+      const masterKey = await CryptoUtils.verifyMasterPassword(
         values.password,
         Buffer.from(salt, 'base64'),
-        {
-          ciphertext: encryptedVerification.ciphertext,
-          iv: encryptedVerification.iv,
-          tag: encryptedVerification.tag || ''
-        }
+        masterKeyHash
       );
 
       // 生成数据加密密钥
