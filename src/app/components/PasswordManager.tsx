@@ -36,48 +36,38 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
 
   // 监听钱包连接状态
   useEffect(() => {
-    if (address) {
-      console.log('钱包已连接:', address);
-      onWalletConnection(true, address);
-    }
-  }, [address]);
-
-  // 检查用户是否存在
-  useEffect(() => {
-    const checkUser = async () => {
-      if (!address) {
-        setIsUserExist(null);
-        return;
-      }
-
-      try {
-        console.log('正在检查用户状态:', address);
+    const handleConnection = async () => {
+      if (address) {
+        console.log('钱包已连接:', address);
         setIsLoading(true);
-        const response = await fetch(`/api/auth/verify?address=${address.toLowerCase()}`);
-        console.log('用户状态检查响应:', response.status);
-        
-        if (response.ok) {
-          console.log('用户存在');
-          setIsUserExist(true);
-        } else if (response.status === 404) {
-          console.log('用户不存在');
-          setIsUserExist(false);
-        } else {
-          throw new Error('检查用户状态失败');
+        try {
+          // 检查用户是否存在
+          const response = await fetch(`/api/auth/verify?address=${address.toLowerCase()}`);
+          console.log('用户状态检查响应:', response.status);
+          
+          if (response.ok) {
+            console.log('用户存在');
+            setIsUserExist(true);
+          } else if (response.status === 404) {
+            console.log('用户不存在');
+            setIsUserExist(false);
+          } else {
+            throw new Error('检查用户状态失败');
+          }
+        } catch (error) {
+          console.error('检查用户状态失败:', error);
+          messageApi.error('检查用户状态失败');
+        } finally {
+          setIsLoading(false);
         }
-      } catch (error) {
-        console.error('检查用户状态失败:', error);
-        messageApi.error('检查用户状态失败');
-      } finally {
-        setIsLoading(false);
+        onWalletConnection(true, address);
+      } else {
+        setIsUserExist(null);
       }
     };
 
-    if (address && !isAuthenticated) {
-      console.log('触发用户状态检查:', { address, isAuthenticated });
-      checkUser();
-    }
-  }, [address, isAuthenticated]);
+    handleConnection();
+  }, [address]);
 
   // 初始化并加载密码列表
   useEffect(() => {
@@ -343,6 +333,7 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
                     onClick={() => {
                       disconnect();
                       setIsUserExist(null);
+                      SessionUtils.clearSession();
                       if (onLogout) onLogout();
                     }}
                   >

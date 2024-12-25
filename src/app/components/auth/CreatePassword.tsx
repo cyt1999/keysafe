@@ -59,6 +59,10 @@ function CreatePasswordContent({ onAuthentication }: CreatePasswordProps) {
       if (!response.ok) {
         const errorData = await response.json();
         console.error('API Error:', errorData);
+        if (response.status === 409) {
+          message.error('该钱包地址已设置过主密码，请使用验证功能');
+          return;
+        }
         throw new Error(errorData.error || '设置主密码失败');
       }
 

@@ -20,17 +20,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // 创建或更新用户
-    const user = await prisma.user.upsert({
-      where: { 
-        walletAddress: walletAddress.toLowerCase() 
-      },
-      update: {
-        masterKeyHash,
-        salt,
-        lastLoginAt: new Date()
-      },
-      create: {
+    // 检查用户是否已存在
+    const existingUser = await prisma.user.findUnique({
+      where: { walletAddress: walletAddress.toLowerCase() }
+    });
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: '用户已存在' },
+        { status: 409 }
+      );
+    }
+
+    // 创建新用户
+    const user = await prisma.user.create({
+      data: {
         walletAddress: walletAddress.toLowerCase(),
         masterKeyHash,
         salt,
