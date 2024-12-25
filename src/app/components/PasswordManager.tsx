@@ -2,14 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { Layout, Button, Table, Modal, Form, Input, Typography, Space, Card, Avatar, Tag, message } from 'antd';
-import { PlusOutlined, WalletOutlined, EyeOutlined, EditOutlined, DeleteOutlined, LockOutlined, GlobalOutlined, UserOutlined, SyncOutlined } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+import { PlusOutlined, WalletOutlined, EyeOutlined, EditOutlined, DeleteOutlined, LockOutlined, GlobalOutlined, UserOutlined } from '@ant-design/icons';
 import { ConfigProvider, theme } from 'antd';
 import '../styles/password-manager.css';
 import { useWallet } from '../hooks/useWallet';
 import { getNetworkInfo } from '../config/networks';
 import { PasswordManager as PasswordManagerClass } from '@/utils/passwordManager';
-import { IPFSServiceImpl } from '@/utils/ipfsService';
-import { SessionUtils } from '@/utils/sessionUtils';
 import { PasswordEntry } from '@/utils/types';
 
 const { Header, Content } = Layout;
@@ -23,675 +22,244 @@ interface PasswordManagerProps {
   customContent?: React.ReactNode;
 }
 
-export default function PasswordManager({ 
-  onWalletConnection, 
-  isAuthenticated, 
-  onLogout,
-  customContent 
-}: PasswordManagerProps) {
-  const [form] = Form.useForm();
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isViewModalVisible, setIsViewModalVisible] = useState(false);
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState<PasswordEntry | null>(null);
+export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout, customContent }: PasswordManagerProps) {
   const [passwordManager, setPasswordManager] = useState<PasswordManagerClass | null>(null);
   const [passwords, setPasswords] = useState<PasswordEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const { isConnected, address, network, connectWallet, disconnectWallet } = useWallet();
-  const [syncing, setSyncing] = useState(false);
-  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [editingPassword, setEditingPassword] = useState<PasswordEntry | null>(null);
+  const [form] = Form.useForm();
+  const { address, connect, disconnect } = useWallet();
+  const [searchText, setSearchText] = useState('');
 
-  // 监听钱包连接状态变化
+  // 初始化密码管理器
   useEffect(() => {
-    onWalletConnection(isConnected, address || '');
-  }, [isConnected, address, onWalletConnection]);
-
-  // 初始化PasswordManager
-  useEffect(() => {
-    if (isAuthenticated && address) {
-      const ipfsService = new IPFSServiceImpl();
-      const manager = new PasswordManagerClass(ipfsService, address);
-      
-      // 从会话中获取加密所需的信息
-      const session = SessionUtils.getSession();
-      if (session?.signature && session?.masterKey) {
-        manager.setEncryptionKey(session.signature, session.masterKey)
-          .then(() => {
-            setPasswordManager(manager);
-            // 加载已保存的密码
-            loadPasswords(manager);
-
-            // 添加同步事件监听
-            manager.addEventListener('sync-completed', handleSyncCompleted);
-            manager.addEventListener('sync-error', handleSyncError);
-
-            // 启动自动同步
-            manager.startAutoSync();
-          })
-          .catch(console.error);
-      }
+    if (address && isAuthenticated) {
+      const manager = new PasswordManagerClass(address);
+      setPasswordManager(manager);
+      loadPasswords(manager);
     }
-
-    // 清理函数
     return () => {
       if (passwordManager) {
-        passwordManager.stopAutoSync();
-        passwordManager.removeEventListener('sync-completed', handleSyncCompleted);
-        passwordManager.removeEventListener('sync-error', handleSyncError);
+        passwordManager.disconnect();
       }
     };
-  }, [isAuthenticated, address]);
+  }, [address, isAuthenticated]);
 
   // 加载密码列表
   const loadPasswords = async (manager: PasswordManagerClass) => {
     try {
-      setLoading(true);
       const entries = await manager.getAllEntries();
       setPasswords(entries);
     } catch (error) {
       console.error('加载密码失败:', error);
-    } finally {
-      setLoading(false);
+      message.error('加载密码失败');
     }
   };
 
-  // 处理添加密码
-  const handleAddPassword = async (values: any) => {
-    if (!passwordManager) {
-      console.error('PasswordManager未初始化');
-      return;
-    }
+  // 处理表单提交
+  const handleSubmit = async (values: any) => {
+    if (!passwordManager) return;
 
     try {
-      setLoading(true);
-      const passwordEntry: PasswordEntry = {
-        id: crypto.randomUUID(),
-        title: values.website,
-        username: values.username,
-        password: values.password,
-        website: values.website
+      const entry: PasswordEntry = {
+        id: editingPassword?.id || crypto.randomUUID(),
+        ...values,
       };
 
-      await passwordManager.saveEntry(passwordEntry);
+      if (editingPassword) {
+        await passwordManager.updateEntry(entry);
+      } else {
+        await passwordManager.saveEntry(entry);
+      }
+
       await loadPasswords(passwordManager);
       setIsModalVisible(false);
       form.resetFields();
+      setEditingPassword(null);
+      message.success(editingPassword ? '密码已更新' : '密码已保存');
     } catch (error) {
       console.error('保存密码失败:', error);
-    } finally {
-      setLoading(false);
+      message.error('保存密码失败');
     }
   };
 
   // 处理删除密码
-  const handleDeletePassword = async (id: string) => {
-    if (!passwordManager) {
-      console.error('PasswordManager未初始化');
-      return;
-    }
+  const handleDelete = async (id: string) => {
+    if (!passwordManager) return;
 
     try {
-      setLoading(true);
       await passwordManager.deleteEntry(id);
       await loadPasswords(passwordManager);
+      message.success('密码已删除');
     } catch (error) {
       console.error('删除密码失败:', error);
-    } finally {
-      setLoading(false);
+      message.error('删除密码失败');
     }
   };
 
   // 处理编辑密码
-  const handleEditPassword = async (values: any) => {
-    if (!passwordManager || !currentPassword) {
-      console.error('PasswordManager未初始化或没有选中的密码');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const passwordEntry: PasswordEntry = {
-        id: currentPassword.id,
-        title: values.website,
-        username: values.username,
-        password: values.password,
-        website: values.website
-      };
-
-      await passwordManager.saveEntry(passwordEntry);
-      await loadPasswords(passwordManager);
-      setIsEditModalVisible(false);
-      form.resetFields();
-      message.success('密码修改成功');
-    } catch (error) {
-      console.error('修改密码失败:', error);
-      message.error('修改密码失败');
-    } finally {
-      setLoading(false);
-    }
+  const handleEdit = (record: PasswordEntry) => {
+    setEditingPassword(record);
+    form.setFieldsValue(record);
+    setIsModalVisible(true);
   };
 
-  // 处理查看密码
-  const handleViewPassword = (record: PasswordEntry) => {
-    setCurrentPassword(record);
-    setIsViewModalVisible(true);
-  };
-
-  // 处理编辑密码
-  const handleEditPasswordClick = (record: PasswordEntry) => {
-    setCurrentPassword(record);
-    form.setFieldsValue({
-      website: record.website,
-      username: record.username,
-      password: record.password
-    });
-    setIsEditModalVisible(true);
-  };
-
-  // 处理同步完成事件
-  const handleSyncCompleted = (event: any) => {
-    setSyncing(false);
-    if (event.detail.success) {
-      setLastSyncTime(new Date());
-      if (!event.detail.dataChanged) {
-        message.info('当前数据已是最新，无需同步');
-      } else {
-        message.success('同步成功');
-        // 重新加载密码列表
-        if (passwordManager) {
-          loadPasswords(passwordManager);
-        }
-      }
-    }
-  };
-
-  // 处理同步错误事件
-  const handleSyncError = (event: any) => {
-    setSyncing(false);
-    message.error(`同步失败: ${event.detail.error.message}`);
-  };
-
-  // 手动同步数据
-  const handleManualSync = async () => {
-    if (!passwordManager) {
-      message.error('密码管理器未初始化');
-      return;
-    }
-
-    setSyncing(true);
-    try {
-      await passwordManager.manualSync();
-    } catch (error) {
-      console.error('手动同步失败:', error);
-      message.error('手动同步失败');
-      setSyncing(false);
-    }
-  };
-
-  const columns = [
+  // 表格列定义
+  const columns: ColumnsType<PasswordEntry> = [
     {
-      title: '网站/应用',
-      dataIndex: 'website',
-      key: 'website',
-      width: '25%',
-      render: (text: string, record: PasswordEntry) => (
-        <Space>
-          <Avatar style={{ backgroundColor: '#00B96B' }}>
-            {text.charAt(0).toUpperCase()}
-          </Avatar>
-          <Text strong>{text}</Text>
-        </Space>
-      ),
+      title: '标题',
+      dataIndex: 'title',
+      key: 'title',
+      filteredValue: searchText ? [searchText] : null,
+      onFilter: (_, record) =>
+        record.title.toLowerCase().includes((searchText || '').toLowerCase()) ||
+        record.username.toLowerCase().includes((searchText || '').toLowerCase()) ||
+        (record.website || '').toLowerCase().includes((searchText || '').toLowerCase()),
     },
     {
       title: '用户名',
       dataIndex: 'username',
       key: 'username',
-      width: '25%',
-      render: (text: string) => <Text type="secondary">{text}</Text>,
     },
     {
-      title: '密码',
-      dataIndex: 'password',
-      key: 'password',
-      width: '20%',
-      render: () => <Text type="secondary">••••••••</Text>,
+      title: '网站',
+      dataIndex: 'website',
+      key: 'website',
+      render: (text: string) => text || '-',
     },
     {
       title: '操作',
       key: 'action',
-      render: (_: any, record: PasswordEntry) => (
+      render: (_, record) => (
         <Space size="middle">
-          <Button 
-            type="text" 
-            icon={<EyeOutlined />} 
-            onClick={() => handleViewPassword(record)}
-          />
-          <Button 
-            type="text" 
+          <Button
+            type="text"
             icon={<EditOutlined />}
-            onClick={() => handleEditPasswordClick(record)}
+            onClick={() => handleEdit(record)}
           />
-          <Button 
-            type="text" 
-            icon={<DeleteOutlined />} 
-            onClick={() => handleDeletePassword(record.id)}
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record.id)}
           />
         </Space>
       ),
     },
   ];
 
-  const renderMainContent = () => {
-    if (customContent) {
-      return customContent;
-    }
-
-    return (
-      <Card 
-        bordered={false}
-        style={{ 
-          borderRadius: '16px',
-          boxShadow: '0 8px 24px rgba(0, 185, 107, 0.05)',
-          background: '#FFFFFF',
-          backdropFilter: 'blur(10px)',
-        }}
-      >
-        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Space direction="vertical" size="small">
-            <Title level={4} style={{ margin: 0 }}>密码列表</Title>
-            <Text type="secondary">安全管理您的所有密码</Text>
-          </Space>
-          <Space size="middle">
-            <Search
-              placeholder="搜索密码"
-              style={{ width: 250 }}
-              allowClear
-            />
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />}
-              size="large"
-              onClick={() => setIsModalVisible(true)}
-              style={{ 
-                borderRadius: '8px',
-                boxShadow: '0 2px 8px rgba(0, 185, 107, 0.25)',
-              }}
-            >
-              添加密码
-            </Button>
-          </Space>
-        </div>
-
-        <Table 
-          columns={columns} 
-          dataSource={passwords}
-          loading={loading}
-          bordered={false}
-          rowKey="id"
-          pagination={{ 
-            pageSize: 10,
-            showTotal: (total) => `共 ${total} 条记录`,
-            showSizeChanger: true,
-          }}
-          style={{ marginTop: '8px' }}
-        />
-
-        <Modal
-          title={
-            <Space>
-              <PlusOutlined style={{ color: '#00B96B' }} />
-              <span>添加新密码</span>
-            </Space>
-          }
-          open={isModalVisible}
-          onCancel={() => {
-            setIsModalVisible(false);
-            form.resetFields();
-          }}
-          width={520}
-          className="custom-modal"
-          footer={[
-            <Button 
-              key="cancel" 
-              onClick={() => {
-                setIsModalVisible(false);
-                form.resetFields();
-              }}
-              style={{ borderRadius: '6px' }}
-            >
-              取消
-            </Button>,
-            <Button 
-              key="submit" 
-              type="primary"
-              onClick={() => form.submit()}
-              loading={loading}
-              style={{ 
-                borderRadius: '6px',
-                boxShadow: '0 2px 8px rgba(0, 185, 107, 0.25)',
-              }}
-            >
-              保存
-            </Button>,
-          ]}
-        >
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleAddPassword}
-          >
-            <Form.Item 
-              name="website"
-              label="网站/应用" 
-              rules={[{ required: true, message: '请输入网站或应用名称' }]}
-            >
-              <Input 
-                prefix={<GlobalOutlined style={{ color: '#bfbfbf' }} />}
-                placeholder="请输入网站或应用名称" 
-              />
-            </Form.Item>
-
-            <Form.Item 
-              name="username"
-              label="用户名" 
-              rules={[{ required: true, message: '请输入用户名' }]}
-            >
-              <Input 
-                prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
-                placeholder="请输入用户名" 
-              />
-            </Form.Item>
-
-            <Form.Item 
-              name="password"
-              label="密码" 
-              rules={[{ required: true, message: '请输入密码' }]}
-            >
-              <Input.Password 
-                prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
-                placeholder="请输入密码" 
-              />
-            </Form.Item>
-          </Form>
-        </Modal>
-
-        {/* 查看密码的Modal */}
-        <Modal
-          title={
-            <Space>
-              <EyeOutlined style={{ color: '#00B96B' }} />
-              <span>查看密码</span>
-            </Space>
-          }
-          open={isViewModalVisible}
-          onCancel={() => setIsViewModalVisible(false)}
-          footer={[
-            <Button 
-              key="close" 
-              onClick={() => setIsViewModalVisible(false)}
-              style={{ borderRadius: '6px' }}
-            >
-              关闭
-            </Button>
-          ]}
-          width={520}
-          className="custom-modal"
-        >
-          {currentPassword && (
-            <div className="space-y-4">
-              <div>
-                <Text type="secondary">网站/应用：</Text>
-                <Text strong>{currentPassword.website}</Text>
-              </div>
-              <div>
-                <Text type="secondary">用户名：</Text>
-                <Text strong>{currentPassword.username}</Text>
-              </div>
-              <div>
-                <Text type="secondary">密码：</Text>
-                <Text strong>{currentPassword.password}</Text>
-              </div>
-            </div>
-          )}
-        </Modal>
-
-        {/* 编辑密码的Modal */}
-        <Modal
-          title={
-            <Space>
-              <EditOutlined style={{ color: '#00B96B' }} />
-              <span>编辑密码</span>
-            </Space>
-          }
-          open={isEditModalVisible}
-          onCancel={() => {
-            setIsEditModalVisible(false);
-            form.resetFields();
-          }}
-          width={520}
-          className="custom-modal"
-          footer={[
-            <Button 
-              key="cancel" 
-              onClick={() => {
-                setIsEditModalVisible(false);
-                form.resetFields();
-              }}
-              style={{ borderRadius: '6px' }}
-            >
-              取消
-            </Button>,
-            <Button 
-              key="submit" 
-              type="primary"
-              onClick={() => form.submit()}
-              loading={loading}
-              style={{ 
-                borderRadius: '6px',
-                boxShadow: '0 2px 8px rgba(0, 185, 107, 0.25)',
-              }}
-            >
-              保存
-            </Button>,
-          ]}
-        >
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleEditPassword}
-          >
-            <Form.Item 
-              name="website"
-              label="网站/应用" 
-              rules={[{ required: true, message: '请输入网站或应用名称' }]}
-            >
-              <Input 
-                prefix={<GlobalOutlined style={{ color: '#bfbfbf' }} />}
-                placeholder="请输入网站或应用名称" 
-              />
-            </Form.Item>
-
-            <Form.Item 
-              name="username"
-              label="用户名" 
-              rules={[{ required: true, message: '请输入用户名' }]}
-            >
-              <Input 
-                prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
-                placeholder="请输入用户名" 
-              />
-            </Form.Item>
-
-            <Form.Item 
-              name="password"
-              label="密码" 
-              rules={[{ required: true, message: '请输入密码' }]}
-            >
-              <Input.Password 
-                prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
-                placeholder="请输入密码" 
-              />
-            </Form.Item>
-          </Form>
-        </Modal>
-      </Card>
-    );
-  };
-
   return (
     <ConfigProvider
       theme={{
-        token: {
-          colorPrimary: '#00B96B',
-          borderRadius: 8,
-          colorBgContainer: '#FFFFFF',
-          colorBgLayout: '#FFFFFF',
-        },
-        algorithm: theme.defaultAlgorithm,
+        algorithm: theme.darkAlgorithm,
       }}
     >
-      <Layout style={{ minHeight: '100vh', background: '#FFFFFF' }}>
-        <Header style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: '#FFFFFF',
-          padding: '0 24px',
-          boxShadow: '0 4px 15px rgba(0, 185, 107, 0.05)',
-          backdropFilter: 'blur(10px)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 1,
-        }}>
-          <Space size="middle">
-            <LockOutlined style={{ fontSize: '24px', color: '#00B96B' }} />
-            <Title level={3} style={{ margin: 0, color: '#1A1A1A' }}>
-              KeySafe
+      <Layout className="layout">
+        <Header className="header">
+          <div className="logo-container">
+            <LockOutlined className="logo-icon" />
+            <Title level={4} style={{ margin: 0, color: '#fff' }}>
+              PassKey
             </Title>
-          </Space>
+          </div>
           <Space>
-            {isAuthenticated && (
-              <div className="sync-section" style={{ marginRight: '20px' }}>
-                <Space>
-                  <Button
-                    icon={<SyncOutlined spin={syncing} />}
-                    onClick={handleManualSync}
-                    loading={syncing}
-                    disabled={!passwordManager}
-                    style={{
-                      borderRadius: '8px',
-                      background: 'rgba(0, 185, 107, 0.1)',
-                      border: 'none',
-                      color: '#00B96B'
-                    }}
-                  >
-                    同步数据
-                  </Button>
-                  {lastSyncTime && (
-                    <Text style={{ color: '#666' }}>
-                      最后同步: {lastSyncTime.toLocaleString()}
-                    </Text>
-                  )}
-                </Space>
-              </div>
-            )}
-            {network && (
-              <div className="network-status-container">
-                <Tag 
-                  icon={
-                    <img 
-                      src={getNetworkInfo(network).logo} 
-                      alt={getNetworkInfo(network).name}
-                      style={{ 
-                        width: '14px', 
-                        height: '14px',
-                        marginRight: '4px'
-                      }} 
-                    />
-                  }
-                  style={{ 
-                    padding: '6px 12px',
-                    borderRadius: '12px',
-                    border: 'none',
-                    background: `${getNetworkInfo(network).color}15`,
-                    color: getNetworkInfo(network).color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    boxShadow: `0 2px 4px ${getNetworkInfo(network).color}10`,
-                    transition: 'all 0.3s ease'
+            {address ? (
+              <>
+                <Tag icon={<WalletOutlined />} color="success">
+                  {`${address.slice(0, 6)}...${address.slice(-4)}`}
+                </Tag>
+                <Button
+                  type="text"
+                  onClick={() => {
+                    disconnect();
+                    if (onLogout) onLogout();
                   }}
                 >
-                  {getNetworkInfo(network).name}
-                </Tag>
-              </div>
-            )}
-            <Button
-              type={isConnected ? "default" : "primary"}
-              icon={<WalletOutlined />}
-              size="large"
-              style={{ 
-                borderRadius: '8px',
-                transition: 'all 0.3s ease',
-                ...(isConnected ? {
-                  background: 'rgba(0, 185, 107, 0.1)',
-                  border: 'none',
-                  color: '#00B96B'
-                } : {
-                  boxShadow: '0 4px 12px rgba(0, 185, 107, 0.25)'
-                })
-              }}
-              onMouseEnter={(e) => {
-                const button = e.currentTarget;
-                button.style.transform = 'translateY(-1px)';
-                if (!isConnected) {
-                  button.style.boxShadow = '0 6px 16px rgba(0, 185, 107, 0.3)';
-                } else {
-                  button.style.background = 'rgba(0, 185, 107, 0.15)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                const button = e.currentTarget;
-                button.style.transform = 'translateY(0)';
-                if (!isConnected) {
-                  button.style.boxShadow = '0 4px 12px rgba(0, 185, 107, 0.25)';
-                } else {
-                  button.style.background = 'rgba(0, 185, 107, 0.1)';
-                }
-              }}
-              onClick={() => isConnected ? disconnectWallet() : connectWallet()}
-            >
-              {isConnected ? (
-                <Space size={4}>
-                  <span>已连接</span>
-                  <span style={{ 
-                    opacity: 0.7,
-                    fontSize: '12px',
-                    color: '#00B96B'
-                  }}>
-                    ({address?.slice(0, 4)}...{address?.slice(-4)})
-                  </span>
-                </Space>
-              ) : (
-                "连接钱包"
-              )}
-            </Button>
-            {isConnected && isAuthenticated && (
-              <Button
-                type="text"
-                onClick={onLogout}
-                style={{ color: '#ff4d4f' }}
-              >
-                退出登录
+                  断开连接
+                </Button>
+              </>
+            ) : (
+              <Button type="primary" onClick={() => connect()}>
+                连接钱包
               </Button>
             )}
           </Space>
         </Header>
-        
-        <Content style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
-          {renderMainContent()}
+        <Content className="content">
+          {customContent || (
+            <Card>
+              <div className="toolbar">
+                <Search
+                  placeholder="搜索密码..."
+                  allowClear
+                  onChange={(e) => setSearchText(e.target.value)}
+                  style={{ width: 300 }}
+                />
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setEditingPassword(null);
+                    form.resetFields();
+                    setIsModalVisible(true);
+                  }}
+                >
+                  添加密码
+                </Button>
+              </div>
+              <Table
+                columns={columns}
+                dataSource={passwords}
+                rowKey="id"
+                pagination={{ pageSize: 10 }}
+              />
+            </Card>
+          )}
+          <Modal
+            title={editingPassword ? '编辑密码' : '添加密码'}
+            open={isModalVisible}
+            onOk={() => form.submit()}
+            onCancel={() => {
+              setIsModalVisible(false);
+              form.resetFields();
+              setEditingPassword(null);
+            }}
+          >
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={handleSubmit}
+              initialValues={editingPassword || {}}
+            >
+              <Form.Item
+                name="title"
+                label="标题"
+                rules={[{ required: true, message: '请输入标题' }]}
+              >
+                <Input prefix={<LockOutlined />} />
+              </Form.Item>
+              <Form.Item
+                name="username"
+                label="用户名"
+                rules={[{ required: true, message: '请输入用户名' }]}
+              >
+                <Input prefix={<UserOutlined />} />
+              </Form.Item>
+              <Form.Item
+                name="password"
+                label="密码"
+                rules={[{ required: true, message: '请输入密码' }]}
+              >
+                <Input.Password />
+              </Form.Item>
+              <Form.Item name="website" label="网站">
+                <Input prefix={<GlobalOutlined />} />
+              </Form.Item>
+              <Form.Item name="notes" label="备注">
+                <Input.TextArea />
+              </Form.Item>
+            </Form>
+          </Modal>
         </Content>
       </Layout>
     </ConfigProvider>

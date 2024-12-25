@@ -1,98 +1,121 @@
-import { useState } from 'react';
-import { PasswordUtils } from '@/utils/passwordUtils';
-import { StorageUtils } from '@/utils/storage';
+'use client';
+
+import React, { useState } from 'react';
+import { Form, Input, Button, Typography, Space, message } from 'antd';
+import { LockOutlined } from '@ant-design/icons';
+import { useWallet } from '../../hooks/useWallet';
+import { CryptoUtils } from '@/utils/cryptoUtils';
 import { SessionUtils } from '@/utils/sessionUtils';
-import { useWallet } from '@/app/hooks/useWallet';
+
+const { Title, Text } = Typography;
 
 interface VerifyPasswordProps {
-  address: string;
-  onSuccess: () => void;
+  onAuthentication: (authenticated: boolean) => void;
 }
 
-export default function VerifyPassword({ address, onSuccess }: VerifyPasswordProps) {
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const { provider } = useWallet();
+export default function VerifyPassword({ onAuthentication }: VerifyPasswordProps) {
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const { address, provider } = useWallet();
 
-  const getWalletSignature = async (): Promise<string> => {
-    if (!provider) {
-      throw new Error('钱包未连接');
-    }
-    const signer = await provider.getSigner();
-    const message = 'KeySafe: 请签名以验证您的身份';
-    return await signer.signMessage(message);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const userData = StorageUtils.getUserData(address);
-    if (!userData) {
-      setError('用户数据不存在');
+  const handleSubmit = async (values: { password: string }) => {
+    if (!address || !provider) {
+      message.error('钱包未连接');
       return;
     }
 
     try {
-      const isValid = PasswordUtils.verifyMasterPassword(
-        password,
-        userData.salt,
-        userData.verificationString,
-        userData.encryptedVerificationString
-      );
+      setLoading(true);
 
-      if (isValid) {
-        try {
-          // 获取钱包签名
-          const signature = await getWalletSignature();
-          // 从密码派生主密钥
-          const masterKey = PasswordUtils.deriveKey(password, userData.salt);
-          
-          // 创建会话并保存必要的信息
-          SessionUtils.createSession(address, { signature, masterKey });
-          onSuccess();
-        } catch (error) {
-          console.error('设置加密密钥失败:', error);
-          setError('设置加密密钥失败，请重试');
-        }
-      } else {
-        setError('密码错误');
+      // 获取钱包签名
+      const messageText = `PassKey Authentication\nAddress: ${address}`;
+      const signer = await provider.getSigner();
+      const signature = await signer.signMessage(messageText);
+
+      // 生成主密钥
+      const masterKey = await CryptoUtils.generateMasterKey(values.password);
+      
+      // 生成加密密钥
+      await CryptoUtils.deriveEncryptionKey(signature, masterKey);
+
+      // 保存会话数据
+      SessionUtils.createSession(address, masterKey);
+
+      // 验证密码
+      const response = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          walletAddress: address,
+          signature,
+          masterKey: masterKey.toString('hex'),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('验证失败');
       }
-    } catch (err) {
-      console.error('验证密码时发生错误:', err);
-      setError('验证密码时发生错误');
+
+      message.success('验证成功');
+      onAuthentication(true);
+    } catch (error) {
+      console.error('验证失败:', error);
+      message.error('密码错误');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-6 text-center">验证主密码</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            主密码
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="请输入主密码"
-          />
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      minHeight: '100vh',
+      padding: '2rem'
+    }}>
+      <Space direction="vertical" size="large" style={{ width: '100%', maxWidth: '400px' }}>
+        <div style={{ textAlign: 'center' }}>
+          <Title level={2}>验证主密码</Title>
+          <Text>
+            请输入您的主密码以访问密码库。
+          </Text>
         </div>
 
-        {error && (
-          <div className="mb-4 text-red-500 text-sm text-center">
-            {error}
-          </div>
-        )}
-
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <Form
+          form={form}
+          onFinish={handleSubmit}
+          layout="vertical"
+          requiredMark={false}
         >
-          验证密码
-        </button>
-      </form>
+          <Form.Item
+            name="password"
+            label="主密码"
+            rules={[
+              { required: true, message: '请输入主密码' }
+            ]}
+          >
+            <Input.Password 
+              prefix={<LockOutlined />}
+              placeholder="请输入主密码"
+            />
+          </Form.Item>
+
+          <Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              block
+            >
+              验证密码
+            </Button>
+          </Form.Item>
+        </Form>
+      </Space>
     </div>
   );
 } 

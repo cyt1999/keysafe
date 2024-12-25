@@ -7,15 +7,19 @@ export interface PasswordEntry {
   username: string;
   password: string;
   website?: string;
+  notes?: string;
+  tags?: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 /**
  * 加密数据
  */
 export interface EncryptedData {
-  iv: string;
-  data: string;
-  authTag: string;
+  ciphertext: string;  // base64 encoded encrypted data
+  iv: string;         // base64 encoded initialization vector
+  tag: string;        // base64 encoded authentication tag
 }
 
 /**
