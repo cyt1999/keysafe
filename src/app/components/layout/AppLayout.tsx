@@ -35,7 +35,7 @@ const LogoIcon = () => (
 
 interface AppLayoutProps {
   children: React.ReactNode;
-  address?: string;
+  address: string | null;
   onConnect: () => void;
   onDisconnect: () => void;
 }
@@ -77,7 +77,7 @@ export function AppLayout({ children, address, onConnect, onDisconnect }: AppLay
               />
             </div>
           ) : (
-            <Button type="primary" onClick={onConnect}>
+            <Button type="primary" icon={<WalletOutlined />} onClick={onConnect}>
               连接钱包
             </Button>
           )}

@@ -8,6 +8,7 @@ import { CryptoUtils } from '@/utils/cryptoUtils';
 import { SessionUtils } from '@/utils/sessionUtils';
 import CreatePassword from './auth/CreatePassword';
 import VerifyPassword from './auth/VerifyPassword';
+import ConnectWallet from './auth/ConnectWallet';
 import { AppLayout } from './layout/AppLayout';
 import { PasswordList } from './password/PasswordList';
 import { PasswordForm } from './password/PasswordForm';
@@ -208,7 +209,7 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
 
   const renderContent = () => {
     if (!address) {
-      return null;
+      return <ConnectWallet onConnection={onWalletConnection} />;
     }
 
     if (isLoading) {
