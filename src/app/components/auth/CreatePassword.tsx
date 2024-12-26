@@ -66,6 +66,12 @@ function CreatePasswordContent({ onAuthentication }: CreatePasswordProps) {
         throw new Error(errorData.error || '设置主密码失败');
       }
 
+      const data = await response.json();
+      // 保存头像到本地存储，以便其他组件使用
+      if (data.avatar) {
+        localStorage.setItem(`avatar_${address.toLowerCase()}`, data.avatar);
+      }
+
       message.success('主密码设置成功');
       onAuthentication(true);
     } catch (error) {

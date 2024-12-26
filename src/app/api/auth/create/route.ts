@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { generatePixelAvatar, svgToBase64 } from '@/app/utils/avatarGenerator';
 
 const prisma = new PrismaClient();
 
@@ -32,18 +33,26 @@ export async function POST(request: Request) {
       );
     }
 
+    // 生成用户头像
+    const avatarSvg = generatePixelAvatar();
+    const avatarBase64 = svgToBase64(avatarSvg);
+
     // 创建新用户
     const user = await prisma.user.create({
       data: {
         walletAddress: walletAddress.toLowerCase(),
         masterKeyHash,
         salt,
+        avatar: avatarBase64,
         preferences: {},
         lastLoginAt: new Date()
       }
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      avatar: avatarBase64 
+    });
   } catch (error) {
     console.error('创建用户失败:', error);
     return NextResponse.json(

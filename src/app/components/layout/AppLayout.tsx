@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
-import { Layout, Typography, Space, Button, Tag } from 'antd';
-import { LockOutlined, WalletOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import { Layout, Typography, Space, Button, Tag, Avatar } from 'antd';
+import { LockOutlined, WalletOutlined, UserOutlined } from '@ant-design/icons';
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -41,6 +41,17 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, address, onConnect, onDisconnect }: AppLayoutProps) {
+  const [avatar, setAvatar] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (address) {
+      const savedAvatar = localStorage.getItem(`avatar_${address.toLowerCase()}`);
+      setAvatar(savedAvatar);
+    } else {
+      setAvatar(null);
+    }
+  }, [address]);
+
   return (
     <Layout className="layout">
       <Header className="header">
@@ -50,17 +61,21 @@ export function AppLayout({ children, address, onConnect, onDisconnect }: AppLay
         </div>
         <Space>
           {address ? (
-            <>
-              <Tag icon={<WalletOutlined />} color="success">
+            <div className="user-info">
+              <Tag 
+                icon={<WalletOutlined />} 
+                color="success"
+                onClick={onDisconnect}
+                title="点击断开连接"
+              >
                 {`${address.slice(0, 6)}...${address.slice(-4)}`}
               </Tag>
-              <Button
-                type="text"
-                onClick={onDisconnect}
-              >
-                断开连接
-              </Button>
-            </>
+              <Avatar 
+                size={40}
+                icon={<UserOutlined />}
+                src={avatar}
+              />
+            </div>
           ) : (
             <Button type="primary" onClick={onConnect}>
               连接钱包
