@@ -1,4 +1,6 @@
-/* 全局样式变量 */
+/**
+ * 全局样式变量
+ * --------------------------------- */
 :root {
   /* 主色调 */
   --color-primary: #00B96B;
@@ -53,7 +55,9 @@
   --font-weight-bold: 600;
 }
 
-/* 基础样式重置 */
+/**
+ * 基础样式重置
+ * --------------------------------- */
 * {
   margin: 0;
   padding: 0;
@@ -70,7 +74,9 @@ body {
   background: var(--color-bg-secondary);
 }
 
-/* 滚动条样式 */
+/**
+ * 滚动条样式
+ * --------------------------------- */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -90,7 +96,10 @@ body {
   background: linear-gradient(45deg, var(--color-primary-active), var(--color-primary));
 }
 
-/* 布局样式 */
+/**
+ * 布局相关样式
+ * --------------------------------- */
+/* 主布局容器 */
 .layout {
   min-height: 100vh;
   background: var(--color-bg-secondary);
@@ -119,13 +128,16 @@ body {
 .logo-container {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: 8px;
+  height: 44px;
 }
 
 .logo-text {
-  color: var(--color-text-primary) !important;
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-lg);
+  color: #4A4A4A !important;
+  font-weight: 600 !important;
+  font-size: 22px !important;
+  letter-spacing: 0.2px;
+  line-height: 44px !important;
 }
 
 .logo-icon {
@@ -150,6 +162,9 @@ body {
   margin-bottom: var(--spacing-xl);
 }
 
+/**
+ * 组件样式
+ * --------------------------------- */
 /* 搜索框样式 */
 .ant-input-group-wrapper.ant-input-search {
   width: 240px !important;
@@ -230,7 +245,7 @@ body {
   box-shadow: var(--shadow-lg);
 }
 
-/* 按钮基础样式 */
+/* 按钮样式 */
 .ant-btn {
   transition: var(--transition-base);
   font-weight: var(--font-weight-medium);
@@ -244,7 +259,6 @@ body {
   font-size: var(--font-size-base);
 }
 
-/* 主要按钮样式 */
 .ant-btn-primary,
 .ant-btn-variant-solid {
   background: var(--color-primary) !important;
@@ -265,7 +279,6 @@ body {
   box-shadow: none;
 }
 
-/* 次要按钮样式 */
 .ant-btn-default {
   background: var(--color-primary-light);
   border: 1px solid var(--color-primary-border);
@@ -301,117 +314,24 @@ body {
   border: 1px solid var(--color-primary-border) !important;
 }
 
-/* 表格样式 */
-.ant-table {
-  background: transparent;
-}
-
-.ant-table-thead > tr > th {
-  background: var(--color-bg-mask) !important;
-  color: var(--color-text-primary) !important;
-  font-weight: var(--font-weight-bold);
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 2px solid var(--color-primary-border);
-}
-
-.ant-table-tbody > tr > td {
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--color-primary-border);
-  transition: var(--transition-base);
-  color: var(--color-text-primary) !important;
-}
-
-.ant-table-tbody > tr:hover > td {
-  background: var(--color-bg-mask) !important;
-}
-
-/* 表格空数据样式 */
-.ant-table-empty .ant-table-tbody > tr.ant-table-placeholder > td {
-  color: rgba(44, 62, 80, 0.45) !important;
-}
-
-.ant-empty-description {
-  color: rgba(44, 62, 80, 0.45) !important;
-}
-
-.ant-empty-normal {
-  color: rgba(44, 62, 80, 0.45) !important;
-}
-
-.ant-empty .ant-empty-description {
-  display: none;
-}
-
-.ant-empty::after {
-  content: '暂无数据';
-  color: rgba(44, 62, 80, 0.45);
-  font-size: var(--font-size-base);
-}
-
-/* 模态框样式 */
-.ant-modal-content {
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-md) !important;
-  box-shadow: var(--shadow-lg);
-  background: #FFFFFF !important;
-}
-
-.ant-modal-mask {
-  background-color: rgba(0, 0, 0, 0.45) !important;
-}
-
-.ant-modal-header {
-  border-bottom: none;
-  padding-bottom: var(--spacing-sm) !important;
-  margin-bottom: 0 !important;
-  background: #FFFFFF !important;
-}
-
-.ant-modal-title {
-  color: var(--color-text-primary) !important;
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-lg) !important;
-  line-height: 1.4 !important;
-}
-
-.ant-modal-body {
-  background: #FFFFFF !important;
-  padding: var(--spacing-sm) 0 !important;
-}
-
-.ant-modal-footer {
-  border-top: none;
-  padding-top: var(--spacing-sm) !important;
-  background: #FFFFFF !important;
-  margin-top: 0 !important;
-}
-
-/* Modal中的按钮样式 */
-.ant-modal-footer .ant-btn {
+/* 钱包地址标签样式 */
+.ant-tag {
   height: 32px !important;
   padding: 0 var(--spacing-md) !important;
-  font-size: var(--font-size-base) !important;
+  font-size: 14px !important;
   line-height: 30px !important;
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-primary-light) !important;
+  border: 1px solid var(--color-primary-border) !important;
+  color: var(--color-text-secondary) !important;
+  border-radius: var(--radius-md) !important;
 }
 
-.ant-modal-footer .ant-btn-default {
-  background: #fff !important;
-  border: 1px solid var(--color-border) !important;
-  color: var(--color-text-primary) !important;
-}
-
-.ant-modal-footer .ant-btn-default:hover {
-  background: #fff !important;
-  border-color: var(--color-border-hover) !important;
-  color: var(--color-text-primary) !important;
-  transform: none;
-}
-
-.ant-modal-footer .ant-btn-primary {
-  height: 32px !important;
-  padding: 0 var(--spacing-md) !important;
-  font-size: var(--font-size-base) !important;
-  line-height: 32px !important;
+.ant-tag .anticon {
+  font-size: 15px !important;
+  margin-right: 6px !important;
+  color: var(--color-text-secondary) !important;
 }
 
 /* 表单样式 */
@@ -496,14 +416,7 @@ body {
   color: var(--color-primary) !important;
 }
 
-/* 头像样式 */
-.ant-avatar {
-  border: 2px solid var(--color-primary-border);
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
-  color: var(--color-text-light);
-  font-weight: var(--font-weight-medium);
-}
-
+/* 文本域样式 */
 .ant-input-textarea {
   height: auto !important;
   border-radius: var(--radius-md) !important;
@@ -514,4 +427,124 @@ body {
   resize: none;
   padding: 8px 12px !important;
   border-radius: var(--radius-md) !important;
+}
+
+/* 模态框样式 */
+.ant-modal-content {
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-md) !important;
+  box-shadow: var(--shadow-lg);
+  background: #FFFFFF !important;
+}
+
+.ant-modal-mask {
+  background-color: rgba(0, 0, 0, 0.45) !important;
+}
+
+.ant-modal-header {
+  border-bottom: none;
+  padding-bottom: var(--spacing-sm) !important;
+  margin-bottom: 0 !important;
+  background: #FFFFFF !important;
+}
+
+.ant-modal-title {
+  color: var(--color-text-primary) !important;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg) !important;
+  line-height: 1.4 !important;
+}
+
+.ant-modal-body {
+  background: #FFFFFF !important;
+  padding: var(--spacing-sm) 0 !important;
+}
+
+.ant-modal-footer {
+  border-top: none;
+  padding-top: var(--spacing-sm) !important;
+  background: #FFFFFF !important;
+  margin-top: 0 !important;
+}
+
+.ant-modal-footer .ant-btn {
+  height: 32px !important;
+  padding: 0 var(--spacing-md) !important;
+  font-size: var(--font-size-base) !important;
+  line-height: 30px !important;
+}
+
+.ant-modal-footer .ant-btn-default {
+  background: #fff !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+}
+
+.ant-modal-footer .ant-btn-default:hover {
+  background: #fff !important;
+  border-color: var(--color-border-hover) !important;
+  color: var(--color-text-primary) !important;
+  transform: none;
+}
+
+.ant-modal-footer .ant-btn-primary {
+  height: 32px !important;
+  padding: 0 var(--spacing-md) !important;
+  font-size: var(--font-size-base) !important;
+  line-height: 32px !important;
+}
+
+/* 表格样式 */
+.ant-table {
+  background: transparent;
+}
+
+.ant-table-thead > tr > th {
+  background: var(--color-bg-mask) !important;
+  color: var(--color-text-primary) !important;
+  font-weight: var(--font-weight-bold);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 2px solid var(--color-primary-border);
+}
+
+.ant-table-tbody > tr > td {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-primary-border);
+  transition: var(--transition-base);
+  color: var(--color-text-primary) !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: var(--color-bg-mask) !important;
+}
+
+/* 表格空数据样式 */
+.ant-table-empty .ant-table-tbody > tr.ant-table-placeholder > td {
+  color: rgba(44, 62, 80, 0.45) !important;
+}
+
+.ant-empty-description {
+  color: rgba(44, 62, 80, 0.45) !important;
+}
+
+.ant-empty-normal {
+  color: rgba(44, 62, 80, 0.45) !important;
+}
+
+.ant-empty .ant-empty-description {
+  display: none;
+}
+
+.ant-empty::after {
+  content: '暂无数据';
+  color: rgba(44, 62, 80, 0.45);
+  font-size: var(--font-size-base);
+}
+
+/* 头像样式 */
+.ant-avatar {
+  border: 2px solid var(--color-primary-border);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+  color: var(--color-text-light);
+  font-weight: var(--font-weight-medium);
 } 
