@@ -37,7 +37,7 @@ function VerifyPasswordContent({ onAuthentication }: VerifyPasswordProps) {
       const { masterKeyHash, salt } = await response.json();
 
       // 获取钱包签名
-      const messageText = `PassKey Authentication\nAddress: ${address}`;
+      const messageText = `KeySafe Authentication\nAddress: ${address}`;
       const signer = await provider.getSigner();
       const signature = await signer.signMessage(messageText);
 

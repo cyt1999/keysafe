@@ -34,9 +34,9 @@ export default function ConnectWallet({ onConnection }: ConnectWalletProps) {
     }}>
       <Space direction="vertical" size="large" align="center">
         <LockOutlined style={{ fontSize: '64px', color: '#1890ff' }} />
-        <Title level={2}>欢迎使用 PassKey</Title>
+        <Title level={2}>欢迎使用 KeySafe</Title>
         <Text style={{ maxWidth: '500px', textAlign: 'center', marginBottom: '2rem' }}>
-          PassKey 是一个去中心化的密码管理工具，帮助您安全地管理所有密码。
+          KeySafe 是一个去中心化的密码管理工具，帮助您安全地管理所有密码。
           请连接您的钱包开始使用。
         </Text>
         <Button 

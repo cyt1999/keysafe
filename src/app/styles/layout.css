@@ -122,6 +122,12 @@ body {
   gap: var(--spacing-sm);
 }
 
+.logo-text {
+  color: var(--color-text-primary) !important;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+}
+
 .logo-icon {
   font-size: var(--font-size-xl);
   color: var(--color-primary);
@@ -317,6 +323,29 @@ body {
 
 .ant-table-tbody > tr:hover > td {
   background: var(--color-bg-mask) !important;
+}
+
+/* 表格空数据样式 */
+.ant-table-empty .ant-table-tbody > tr.ant-table-placeholder > td {
+  color: rgba(44, 62, 80, 0.45) !important;
+}
+
+.ant-empty-description {
+  color: rgba(44, 62, 80, 0.45) !important;
+}
+
+.ant-empty-normal {
+  color: rgba(44, 62, 80, 0.45) !important;
+}
+
+.ant-empty .ant-empty-description {
+  display: none;
+}
+
+.ant-empty::after {
+  content: '暂无数据';
+  color: rgba(44, 62, 80, 0.45);
+  font-size: var(--font-size-base);
 }
 
 /* 模态框样式 */

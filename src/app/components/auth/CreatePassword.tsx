@@ -30,7 +30,7 @@ function CreatePasswordContent({ onAuthentication }: CreatePasswordProps) {
       setLoading(true);
 
       // 获取钱包签名
-      const messageText = `PassKey Authentication\nAddress: ${address}`;
+      const messageText = `KeySafe Authentication\nAddress: ${address}`;
       const signer = await provider.getSigner();
       const signature = await signer.signMessage(messageText);
 
