@@ -1,27 +1,25 @@
-import type { Metadata } from "next";
-import { Geist } from "next/font/google";
-import "./globals.css";
+'use client';
+
+import { RouteGuard } from './components/auth/RouteGuard';
+import { ConfigProvider, theme } from 'antd';
 import AntdRegistry from './components/AntdRegistry';
-
-const geist = Geist({
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "密码管理器",
-  description: "安全管理您的所有密码",
-};
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="zh">
-      <body className={geist.className}>
+      <body>
         <AntdRegistry>
-          {children}
+          <ConfigProvider
+            theme={{
+              algorithm: theme.defaultAlgorithm,
+            }}
+          >
+            <RouteGuard>{children}</RouteGuard>
+          </ConfigProvider>
         </AntdRegistry>
       </body>
     </html>
