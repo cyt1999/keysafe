@@ -1,0 +1,55 @@
+/* 按钮基础样式 */
+.ant-btn,
+[class*='css-dev-only-do-not-override'] .ant-btn {
+  transition: all 0.3s ease;
+  font-weight: var(--font-weight-medium);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  height: 32px;
+  border-radius: var(--radius-md);
+  padding: 0 var(--spacing-md);
+  font-size: var(--font-size-base);
+}
+
+/* 主要按钮样式 */
+.ant-btn-primary,
+[class*='css-dev-only-do-not-override'] .ant-btn-primary {
+  background: var(--color-primary);
+  border: none;
+  color: #fff;
+  box-shadow: none;
+  height: 32px;
+  padding: 0 var(--spacing-lg);
+  font-size: var(--font-size-base);
+  line-height: 32px;
+}
+
+/* 主要按钮悬浮效果 */
+.ant-btn-primary:not(:disabled):hover,
+[class*='css-dev-only-do-not-override'] .ant-btn-primary:not(:disabled):hover {
+  background: linear-gradient(45deg, var(--color-primary), var(--color-primary-hover));
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* 按钮图标样式 */
+.ant-btn .ant-btn-icon,
+[class*='css-dev-only-do-not-override'] .ant-btn .ant-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-base);
+}
+
+/* 工具栏中的按钮特殊样式 */
+.content__action .ant-btn,
+[class*='css-dev-only-do-not-override'] .content__action .ant-btn {
+  margin-left: auto;
+  height: 32px;
+  padding: 0 var(--spacing-lg);
+  font-size: var(--font-size-base);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+} 

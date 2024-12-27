@@ -1,0 +1,41 @@
+/**
+ * 基础样式重置
+ * --------------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background: var(--color-bg-secondary);
+}
+
+/**
+ * 滚动条样式
+ * --------------------------------- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+  opacity: 0.8;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-active);
+} 

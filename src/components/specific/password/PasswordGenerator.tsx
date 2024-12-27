@@ -69,7 +69,7 @@ export const PasswordGenerator = forwardRef<PasswordGeneratorRef, PasswordGenera
             }}
           />
         </div>
-        <Space direction="vertical">
+        <Space direction="horizontal">
           <Checkbox
             checked={options.useUppercase}
             onChange={() => handleOptionChange('useUppercase')}

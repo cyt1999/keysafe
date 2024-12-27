@@ -1,0 +1,69 @@
+/* 模态框样式 */
+.ant-modal-content {
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  box-shadow: var(--shadow-lg);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* Card 样式 */
+.ant-card {
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: none;
+}
+
+.ant-card-body {
+  padding: var(--spacing-xl);
+  background: transparent;
+}
+
+/* 模态框遮罩 */
+.ant-modal-mask {
+  background-color: rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: blur(4px);
+}
+
+.ant-modal-wrap {
+  backdrop-filter: none;
+}
+
+.ant-modal-header {
+  border-bottom: none;
+  padding-bottom: var(--spacing-sm);
+  margin-bottom: 16px;
+  background: transparent;
+}
+
+.ant-modal-title {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+  line-height: 1.4;
+}
+
+.ant-modal-body {
+  background: transparent;
+  padding: 0;
+  width: 100%;
+}
+
+.ant-modal-footer {
+  border-top: none;
+  padding-top: var(--spacing-sm);
+  background: transparent;
+  margin-top: 16px;
+}
+
+/* 自定义模态框样式 */
+.custom-modal .ant-modal-content {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 185, 107, 0.08);
+} 

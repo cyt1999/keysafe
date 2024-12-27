@@ -1,0 +1,70 @@
+/* 表格样式 */
+.ant-table {
+  background: transparent;
+}
+
+/* 表格头部样式 */
+.ant-table-thead > tr > th {
+  background: rgba(0, 185, 107, 0.03) !important;
+  color: var(--color-primary) !important;
+  font-weight: var(--font-weight-medium);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 2px solid var(--color-primary-border);
+}
+
+/* 表格内容样式 */
+.ant-table-tbody > tr > td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-primary-border);
+  transition: var(--transition-base);
+  color: var(--color-text-primary);
+  background: var(--color-bg-primary);
+}
+
+/* 表格行悬浮效果 */
+.ant-table-tbody > tr:hover > td {
+  background: var(--color-primary-light) !important;
+  cursor: pointer;
+}
+
+/* 密码表格特殊样式 */
+.password-table .ant-table-tbody > tr > td {
+  background: var(--color-bg-primary);
+}
+
+.password-table .ant-table-tbody > tr:hover > td {
+  background: var(--color-primary-light) !important;
+}
+
+.password-table .ant-table-thead > tr > th {
+  background: rgba(0, 185, 107, 0.03) !important;
+  color: rgba(0, 0, 0, 0.88) !important;
+  font-weight: 500;
+}
+
+.password-table .ant-table-cell {
+  padding: 12px 16px !important;
+}
+
+/* 表格空数据样式 */
+.ant-table-empty .ant-table-tbody > tr.ant-table-placeholder > td {
+  color: rgba(44, 62, 80, 0.45);
+}
+
+.ant-empty-description {
+  color: rgba(44, 62, 80, 0.45);
+}
+
+.ant-empty-normal {
+  color: rgba(44, 62, 80, 0.45);
+}
+
+.ant-empty .ant-empty-description {
+  display: none;
+}
+
+.ant-empty::after {
+  content: '暂无数据';
+  color: rgba(44, 62, 80, 0.45);
+  font-size: var(--font-size-base);
+} 

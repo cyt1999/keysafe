@@ -1,0 +1,42 @@
+/* 主布局容器 */
+.layout {
+  min-height: 100vh;
+  background: var(--color-bg-secondary);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 内容区域容器 */
+.content-wrapper {
+  flex: 1;
+  width: 100%;
+  background: var(--color-bg-secondary);
+  display: flex;
+  justify-content: center;
+}
+
+/* 内容区域样式 */
+.content {
+  padding: var(--spacing-xl);
+  max-width: 1200px;
+  width: 100%;
+}
+
+/* 工具栏样式 */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+  gap: var(--spacing-lg);
+}
+
+/* 添加密码按钮样式 */
+.toolbar .ant-btn-primary {
+  height: 32px;
+  padding: 0 var(--spacing-md);
+  font-size: var(--font-size-base);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+} 

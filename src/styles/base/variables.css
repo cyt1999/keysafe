@@ -1,0 +1,56 @@
+/**
+ * 全局样式变量
+ * --------------------------------- */
+:root {
+  /* 主色调 - 品牌绿色系 */
+  --color-primary: #00B96B;
+  --color-primary-hover: #00D6A2;
+  --color-primary-active: #00A15C;
+  --color-primary-light: rgba(0, 185, 107, 0.08);
+  --color-primary-border: rgba(0, 185, 107, 0.15);
+  
+  /* 文字颜色 - 从深到浅 */
+  --color-text-primary: #2C3E50;    /* 主要文字 */
+  --color-text-secondary: #00854D;  /* 次要文字 */
+  --color-text-light: #FFFFFF;      /* 浅色文字 */
+  
+  /* 背景颜色 */
+  --color-bg-primary: #FFFFFF;      /* 主背景（header背景） */
+  --color-bg-secondary: #F5F7FA;    /* 次背景（内容区背景） */
+  --color-bg-mask: rgba(0, 185, 107, 0.04);  /* 遮罩 */
+  
+  /* 边框颜色 */
+  --color-border: #E4E7ED;          /* 普通边框 */
+  --color-border-hover: #DCDFE6;    /* 悬停边框 */
+  
+  /* 阴影 - 不同层级 */
+  --shadow-sm: 0 4px 12px rgba(0, 185, 107, 0.06);   /* 小阴影 */
+  --shadow-md: 0 8px 24px rgba(0, 185, 107, 0.08);   /* 中阴影 */
+  --shadow-lg: 0 20px 40px rgba(0, 185, 107, 0.12);  /* 大阴影 */
+  
+  /* 圆角 - 从小到大 */
+  --radius-sm: 8px;    /* 小圆角 */
+  --radius-md: 12px;   /* 中圆角 */
+  --radius-lg: 16px;   /* 大圆角 */
+  --radius-xl: 24px;   /* 特大圆角 */
+  
+  /* 间距 - 从小到大 */
+  --spacing-xs: 4px;   /* 超小间距 */
+  --spacing-sm: 8px;   /* 小间距 */
+  --spacing-md: 16px;  /* 中间距 */
+  --spacing-lg: 24px;  /* 大间距 */
+  --spacing-xl: 32px;  /* 特大间距 */
+  
+  /* 动画 */
+  --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* 字体相关 */
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-size-sm: 12px;     /* 小字 */
+  --font-size-base: 14px;   /* 基础 */
+  --font-size-lg: 16px;     /* 大字 */
+  --font-size-xl: 20px;     /* 特大 */
+  --font-weight-normal: 400;  /* 常规 */
+  --font-weight-medium: 500;  /* 中等 */
+  --font-weight-bold: 600;    /* 粗体 */
+} 

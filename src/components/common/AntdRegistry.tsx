@@ -4,7 +4,7 @@ import React from 'react';
 import { createCache, extractStyle, StyleProvider } from '@ant-design/cssinjs';
 import { ConfigProvider, theme } from 'antd';
 import { useServerInsertedHTML } from 'next/navigation';
-import '@/styles/layout.css';
+import '@/styles/index.css';
 
 const themeConfig = {
   token: {

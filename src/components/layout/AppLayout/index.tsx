@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Layout, Typography, Space, Button, Tag, Avatar } from 'antd';
-import { LockOutlined, WalletOutlined, UserOutlined } from '@ant-design/icons';
+import { Layout, Typography, Space, Button, Tag, Avatar, Dropdown } from 'antd';
+import { LockOutlined, WalletOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import { SessionUtils } from '@/utils/sessionUtils';
 import { LogoIcon } from '@/components/common/Logo';
 
@@ -48,6 +48,24 @@ export function AppLayout({ children, address, onConnect, onDisconnect, onLock }
     if (onLock) onLock();
   };
 
+  const dropdownItems = {
+    items: [
+      {
+        key: 'lock',
+        icon: <LockOutlined />,
+        label: '锁定密码库',
+        onClick: handleLock,
+        disabled: !isUnlocked
+      },
+      {
+        key: 'logout',
+        icon: <LogoutOutlined />,
+        label: '注销',
+        onClick: onDisconnect
+      },
+    ],
+  };
+
   return (
     <Layout className="layout">
       <Header className="header">
@@ -59,28 +77,20 @@ export function AppLayout({ children, address, onConnect, onDisconnect, onLock }
           {address ? (
             <div className="user-info">
               <Space>
-                {isUnlocked && (
-                  <Button 
-                    icon={<LockOutlined />} 
-                    onClick={handleLock}
-                    title="锁定密码库"
-                  >
-                    锁定
-                  </Button>
-                )}
                 <Tag 
                   icon={<WalletOutlined />} 
                   color="success"
-                  onClick={onDisconnect}
-                  title="点击断开连接"
                 >
                   {`${address.slice(0, 6)}...${address.slice(-4)}`}
                 </Tag>
-                <Avatar 
-                  size={40}
-                  icon={<UserOutlined />}
-                  src={avatar}
-                />
+                <Dropdown menu={dropdownItems} placement="bottomRight">
+                  <Avatar 
+                    size={50}
+                    icon={<UserOutlined />}
+                    src={avatar}
+                    style={{ cursor: 'pointer' }}
+                  />
+                </Dropdown>
               </Space>
             </div>
           ) : (
@@ -90,9 +100,11 @@ export function AppLayout({ children, address, onConnect, onDisconnect, onLock }
           )}
         </Space>
       </Header>
-      <Content className="content">
-        {children}
-      </Content>
+      <div className="content-wrapper">
+        <Content className="content">
+          {children}
+        </Content>
+      </div>
     </Layout>
   );
 } 

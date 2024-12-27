@@ -1,0 +1,76 @@
+/* 搜索框样式 */
+.ant-input-search {
+  width: 160px;
+}
+
+.ant-input-search .ant-input-wrapper.ant-input-group {
+  display: flex;
+}
+
+/* 搜索框基础样式 */
+.ant-input-search .ant-input-affix-wrapper,
+[class*='css-dev-only-do-not-override'] .ant-input-search .ant-input-affix-wrapper {
+  height: 32px;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-right: none;
+  transition: var(--transition-base);
+  font-size: var(--font-size-base);
+  padding: 0 11px;
+}
+
+/* 搜索框输入框样式 */
+.ant-input-search .ant-input,
+[class*='css-dev-only-do-not-override'] .ant-input-search .ant-input {
+  height: 30px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+/* 搜索框悬浮和焦点样式 */
+.ant-input-search .ant-input-affix-wrapper:hover,
+[class*='css-dev-only-do-not-override'] .ant-input-search .ant-input-affix-wrapper:hover {
+  border-color: var(--color-primary);
+}
+
+.ant-input-search .ant-input-affix-wrapper-focused,
+[class*='css-dev-only-do-not-override'] .ant-input-search .ant-input-affix-wrapper-focused,
+.ant-input-search .ant-input-affix-wrapper:focus,
+[class*='css-dev-only-do-not-override'] .ant-input-search .ant-input-affix-wrapper:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(0, 185, 107, 0.1);
+}
+
+/* 搜索按钮样式 */
+.ant-input-search .ant-input-group-addon {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.ant-input-search .ant-input-search-button,
+[class*='css-dev-only-do-not-override'] .ant-input-search .ant-input-search-button {
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: var(--color-primary);
+  border: none;
+  height: 32px;
+  width: 32px;
+  transition: var(--transition-base);
+  color: #fff;
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ant-input-search .ant-input-search-button:hover {
+  background: var(--color-primary-hover);
+  color: #fff;
+  transform: none;
+}
+
+.ant-input-search .ant-input-search-button .anticon {
+  color: #fff;
+} 

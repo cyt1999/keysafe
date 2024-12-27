@@ -1,0 +1,31 @@
+/* 头像样式 */
+.ant-avatar {
+  border: 2px solid var(--color-primary-border);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+  color: var(--color-text-light);
+  font-weight: var(--font-weight-medium);
+}
+
+/* 用户信息区域样式 */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.user-info .ant-avatar {
+  flex-shrink: 0;
+  border: 2px solid var(--color-primary-border);
+  background: var(--color-primary-light);
+  transition: var(--transition-base);
+  font-size: 20px;
+}
+
+.user-info .ant-avatar:hover {
+  transform: scale(1.05);
+  border-color: var(--color-primary);
+}
+
+.user-info .ant-avatar .anticon {
+  font-size: 22px;
+} 

@@ -1,0 +1,38 @@
+/* 钱包地址标签样式 */
+.ant-tag {
+  height: 32px;
+  padding: 0 var(--spacing-md);
+  font-size: 14px;
+  line-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-primary-light);
+  border: 1px solid var(--color-primary-border);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.ant-tag:hover {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 185, 107, 0.1);
+}
+
+.ant-tag:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.ant-tag .anticon {
+  font-size: 15px;
+  margin-right: 6px;
+  color: var(--color-text-secondary);
+  transition: transform 0.2s ease-in-out;
+}
+
+.ant-tag:hover .anticon {
+  transform: scale(1.1);
+} 
