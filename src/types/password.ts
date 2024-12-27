@@ -1,0 +1,29 @@
+export interface Password {
+  id: string;
+  userId: string;
+  title: string;
+  username: string;
+  password: string;
+  url?: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PasswordState {
+  passwords: Password[];
+  loading: boolean;
+  error: string | null;
+}
+
+export interface CreatePasswordParams {
+  title: string;
+  username: string;
+  password: string;
+  url?: string;
+  notes?: string;
+}
+
+export interface UpdatePasswordParams extends Partial<CreatePasswordParams> {
+  id: string;
+} 

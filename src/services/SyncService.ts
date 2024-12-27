@@ -1,5 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client';
-import { IPFSService } from '../utils/ipfsService';
+import { IPFSService } from '@/utils/ipfsService';
 
 type PasswordEntryData = {
   id: string;

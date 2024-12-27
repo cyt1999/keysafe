@@ -113,6 +113,139 @@ KeySafe 采用了现代简约的设计风格，注重用户体验和视觉美感
 - 最小化的样式覆盖
 
 
+```
+keysafe/
+├── public/                 # 静态资源目录
+│   ├── images/            # 图片资源
+│   └── favicon.ico        # 网站图标
+│
+├── src/                   # 主项目代码目录
+│   ├── components/        # 组件目录
+│   │   ├── common/        # 通用UI组件
+│   │   │   ├── Button/
+│   │   │   ├── Input/
+│   │   │   └── AntdRegistry.tsx
+│   │   ├── layout/       # 布局组件
+│   │   │   ├── Header/
+│   │   │   ├── Footer/
+│   │   │   └── AppLayout/
+│   │   └── specific/     # 业务组件
+│   │       ├── auth/     # 认证相关组件
+│   │       │   ├── CreatePassword/
+│   │       │   ├── VerifyPassword/
+│   │       │   └── ConnectWallet/
+│   │       └── password/ # 密码管理组件
+│   │           ├── PasswordList/
+│   │           ├── PasswordForm/
+│   │           └── PasswordManager/
+│   │
+│   ├── hooks/            # 自定义Hooks
+│   │   ├── useAuth.ts
+│   │   ├── useWallet.ts
+│   │   └── usePasswordManager.ts
+│   │
+│   ├── lib/             # 工具库
+│   │   ├── crypto/
+│   │   ├── ipfs/
+│   │   └── ethereum/
+│   │
+│   ├── pages/           # 页面路由
+│   │   ├── api/         # API路由
+│   │   │   ├── auth/
+│   │   │   ├── passwords/
+│   │   │   └── admin/
+│   │   ├── _app.tsx
+│   │   ├── _document.tsx
+│   │   ├── index.tsx
+│   │   ├── dashboard/
+│   │   └── auth/
+│   │
+│   ├── services/        # 数据服务
+│   │   ├── auth/
+│   │   │   ├── index.ts
+│   │   │   └── types.ts
+│   │   └── password/
+│   │       ├── index.ts
+│   │       └── types.ts
+│   │
+│   ├── store/          # 状态管理
+│   │   ├── auth/
+│   │   │   ├── slice.ts
+│   │   │   └── types.ts
+│   │   └── password/
+│   │       ├── slice.ts
+│   │       └── types.ts
+│   │
+│   ├── styles/         # 样式文件
+│   │   ├── globals.css
+│   │   ├── variables.scss
+│   │   └── components/
+│   │       ├── auth.module.css
+│   │       └── password.module.css
+│   │
+│   ├── types/          # 类型定义
+│   │   ├── api.d.ts
+│   │   ├── auth.d.ts
+│   │   └── password.d.ts
+│   │
+│   ├── utils/          # 工具函数
+│   │   ├── format.ts
+│   │   ├── validation.ts
+│   │   └── storage.ts
+│   │
+│   └── config/         # 配置文件
+│       ├── constants.ts
+│       └── networks.ts
+│
+├── prisma/             # Prisma配置
+│   └── schema.prisma
+│
+├── .env.local          # 环境变量
+├── .eslintrc.js       # ESLint配置
+├── .prettierrc        # Prettier配置
+├── next.config.js     # Next.js配置
+├── package.json       # 项目依赖
+└── tsconfig.json      # TypeScript配置
+```
+
+
+目录详解
+1. public/
+- 用于存放静态资源（如图片、字体、favicon）。
+- 静态文件可通过 /filename 直接访问。
+2. src/
+- 核心项目目录，便于和外部配置文件区分。
+3. components/
+- common/: 放置全局通用的UI组件（如按钮、表单）。
+- layout/: 包含布局组件，如导航栏、页脚。
+- specific/: 放置业务功能相关的组件。
+4. hooks/
+- 自定义React Hooks，比如 useAuth、useFetch。
+5. lib/
+- 用于封装与项目业务无关的工具或库，比如格式化函数、第三方API调用等。
+6. pages/
+- Next.js约定的页面目录，自动生成路由。
+- api/: 用于编写API路由，适合简单的后端逻辑。
+- _app.tsx: 自定义全局入口，适合引入全局样式或状态管理。
+_document.tsx: 自定义HTML模板，适合引入全局meta信息。
+7. services/
+用于管理与后端的交互逻辑。
+可以按功能模块划分文件，例如 authService.ts。
+8. store/
+- 如果使用状态管理工具（如Redux或Zustand），在此组织状态逻辑。
+- 可按模块划分，例如 authSlice.ts。
+9. styles/
+- 管理全局和局部样式：
+- - globals.css: 定义全局样式。
+- - 使用CSS Modules时，按组件划分样式文件。
+10. types/
+- 定义全局TypeScript类型和接口，保持类型清晰。
+11. utils/
+- 集中存放工具函数，按功能模块划分。
+12. config/
+- 管理项目的全局配置和常量。
+
+
 我主要有三个页面  
 欢迎 - 用来连接钱包（
 主密码验证&创建页面  - 验证主密码  

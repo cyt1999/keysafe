@@ -10,9 +10,8 @@ const nextConfig: NextConfig = {
   compiler: {
     styledComponents: true, // 启用 styled-components 优化
   },
-  experimental: {
-    optimizeCss: true, // 启用 CSS 优化
-  },
+  distDir: '.next',
+  pageExtensions: ['tsx', 'ts'],
 };
 
 export default nextConfig;

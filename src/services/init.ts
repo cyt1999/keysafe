@@ -1,4 +1,4 @@
-import { IPFSServiceImpl } from '../utils/ipfsService';
+import { IPFSServiceImpl } from '@/utils/ipfsService';
 import { SyncService } from './SyncService';
 import { SyncScheduler } from './SyncScheduler';
 
