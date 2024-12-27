@@ -1,0 +1,14 @@
+<svg width="128" height="128" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景外圆 -->
+  <circle cx="22" cy="22" r="22" fill="#E6F7F1" />
+  <!-- 边框圆 -->
+  <circle cx="22" cy="22" r="21" stroke="#00B96B" stroke-width="1.5" fill="none" opacity="0.2" />
+  <!-- 中心白色圆 -->
+  <circle cx="22" cy="19" r="5" fill="#00B96B" />
+  <!-- 小绿圆 -->
+  <circle cx="22" cy="19" r="2" fill="#FFFFFF" />
+  <!-- 下部尖角 -->
+  <path d="M23 24h-2l-1 3h4z" fill="#00B96B" />
+  <!-- 底部绿条 -->
+  <path d="M15 28h14l-2 2H17z M18 31h8l-1 2h-6z" fill="#00B96B" opacity="0.85" />
+</svg>
