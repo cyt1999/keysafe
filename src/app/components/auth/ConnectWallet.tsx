@@ -3,23 +3,29 @@
 import React from 'react';
 import { Button, Typography, Space, message } from 'antd';
 import { WalletOutlined, LockOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
 import { useWallet } from '../../hooks/useWallet';
 
 const { Title, Text } = Typography;
 
-interface ConnectWalletProps {
-  onConnection: (connected: boolean, address: string) => void;
-}
-
-export default function ConnectWallet({ onConnection }: ConnectWalletProps) {
+export default function ConnectWallet() {
   const { connect } = useWallet();
   const [messageApi, contextHolder] = message.useMessage();
+  const router = useRouter();
 
   const handleConnect = async () => {
     try {
       const address = await connect();
       if (address) {
-        onConnection(true, address);
+        // 检查用户是否存在
+        const response = await fetch(`/api/auth/verify?address=${address.toLowerCase()}`);
+        if (response.ok) {
+          router.push('/auth/verify');
+        } else if (response.status === 404) {
+          router.push('/auth/create');
+        } else {
+          throw new Error('检查用户状态失败');
+        }
       }
     } catch (error) {
       console.error('连接钱包失败:', error);

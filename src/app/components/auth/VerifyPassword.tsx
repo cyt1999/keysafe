@@ -3,25 +3,26 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Typography, Space, App, ConfigProvider, theme } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
 import { useWallet } from '../../hooks/useWallet';
 import { CryptoUtils } from '@/utils/cryptoUtils';
 import { SessionUtils } from '@/utils/sessionUtils';
 
 const { Title, Text } = Typography;
 
-interface VerifyPasswordProps {
-  onAuthentication: (authenticated: boolean) => void;
-}
+interface VerifyPasswordProps {}
 
-function VerifyPasswordContent({ onAuthentication }: VerifyPasswordProps) {
+function VerifyPasswordContent() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const { address, provider } = useWallet();
   const { message } = App.useApp();
+  const router = useRouter();
 
   const handleSubmit = async (values: { password: string }) => {
     if (!address || !provider) {
       message.error('钱包未连接');
+      router.push('/');
       return;
     }
 
@@ -55,7 +56,7 @@ function VerifyPasswordContent({ onAuthentication }: VerifyPasswordProps) {
       await SessionUtils.setDataKey(dataKey);
 
       message.success('验证成功');
-      onAuthentication(true);
+      router.push('/dashboard');
     } catch (error) {
       console.error('验证失败:', error);
       message.error('密码错误');
@@ -116,7 +117,7 @@ function VerifyPasswordContent({ onAuthentication }: VerifyPasswordProps) {
   );
 }
 
-export default function VerifyPassword(props: VerifyPasswordProps) {
+export default function VerifyPassword() {
   return (
     <App>
       <ConfigProvider
@@ -124,7 +125,7 @@ export default function VerifyPassword(props: VerifyPasswordProps) {
           algorithm: theme.defaultAlgorithm,
         }}
       >
-        <VerifyPasswordContent {...props} />
+        <VerifyPasswordContent />
       </ConfigProvider>
     </App>
   );

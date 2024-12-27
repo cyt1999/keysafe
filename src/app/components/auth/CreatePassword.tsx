@@ -3,26 +3,26 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Typography, Space, ConfigProvider, theme, App } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
+import { useRouter } from 'next/navigation';
 import { useWallet } from '../../hooks/useWallet';
 import { CryptoUtils } from '@/utils/cryptoUtils';
 import { SessionUtils } from '@/utils/sessionUtils';
-import { PasswordManager } from '@/utils/passwordManager';
 
 const { Title, Text } = Typography;
 
-interface CreatePasswordProps {
-  onAuthentication: (authenticated: boolean) => void;
-}
+interface CreatePasswordProps {}
 
-function CreatePasswordContent({ onAuthentication }: CreatePasswordProps) {
+function CreatePasswordContent() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const { address, provider } = useWallet();
   const { message } = App.useApp();
+  const router = useRouter();
 
   const handleSubmit = async (values: { password: string; confirmPassword: string }) => {
     if (!address || !provider) {
       message.error('钱包未连接');
+      router.push('/');
       return;
     }
 
@@ -61,6 +61,7 @@ function CreatePasswordContent({ onAuthentication }: CreatePasswordProps) {
         console.error('API Error:', errorData);
         if (response.status === 409) {
           message.error('该钱包地址已设置过主密码，请使用验证功能');
+          router.push('/auth/verify');
           return;
         }
         throw new Error(errorData.error || '设置主密码失败');
@@ -73,7 +74,7 @@ function CreatePasswordContent({ onAuthentication }: CreatePasswordProps) {
       }
 
       message.success('主密码设置成功');
-      onAuthentication(true);
+      router.push('/dashboard');
     } catch (error) {
       console.error('设置主密码失败:', error);
       message.error('设置主密码失败');
@@ -162,7 +163,7 @@ function CreatePasswordContent({ onAuthentication }: CreatePasswordProps) {
   );
 }
 
-export default function CreatePassword(props: CreatePasswordProps) {
+export default function CreatePassword() {
   return (
     <App>
       <ConfigProvider
@@ -170,7 +171,7 @@ export default function CreatePassword(props: CreatePasswordProps) {
           algorithm: theme.defaultAlgorithm,
         }}
       >
-        <CreatePasswordContent {...props} />
+        <CreatePasswordContent />
       </ConfigProvider>
     </App>
   );

@@ -2,85 +2,50 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Modal, message } from 'antd';
+import { useRouter } from 'next/navigation';
 import { useWallet } from '../hooks/useWallet';
 import { PasswordEntry, PasswordData } from '@/utils/types';
 import { CryptoUtils } from '@/utils/cryptoUtils';
 import { SessionUtils } from '@/utils/sessionUtils';
-import CreatePassword from './auth/CreatePassword';
-import VerifyPassword from './auth/VerifyPassword';
-import ConnectWallet from './auth/ConnectWallet';
 import { AppLayout } from './layout/AppLayout';
 import { PasswordList } from './password/PasswordList';
 import { PasswordForm } from './password/PasswordForm';
 
 interface PasswordManagerProps {
-  onWalletConnection: (connected: boolean, address: string) => void;
-  isAuthenticated: boolean;
-  onLogout?: () => void;
   customContent?: React.ReactNode;
 }
 
-export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout = () => {}, customContent }: PasswordManagerProps) {
+export function PasswordManager({ customContent }: PasswordManagerProps) {
   const [messageApi, contextHolder] = message.useMessage();
   const [passwords, setPasswords] = useState<PasswordEntry[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingPassword, setEditingPassword] = useState<PasswordEntry | null>(null);
   const [form] = Form.useForm();
-  const { address, connect, disconnect } = useWallet();
-  const [isUserExist, setIsUserExist] = useState<boolean | null>(null);
+  const { address, disconnect } = useWallet();
   const [isLoading, setIsLoading] = useState(false);
-  const [isLocked, setIsLocked] = useState(false);
-
-  // 监听钱包连接状态
-  useEffect(() => {
-    const handleConnection = async () => {
-      if (address) {
-        setIsLoading(true);
-        try {
-          const response = await fetch(`/api/auth/verify?address=${address.toLowerCase()}`);
-          if (response.ok) {
-            setIsUserExist(true);
-          } else if (response.status === 404) {
-            setIsUserExist(false);
-          } else {
-            throw new Error('检查用户状态失败');
-          }
-        } catch (error) {
-          console.error('检查用户状态失败:', error);
-          messageApi.error('检查用户状态失败');
-        } finally {
-          setIsLoading(false);
-        }
-      } else {
-        setIsUserExist(null);
-      }
-    };
-
-    handleConnection();
-  }, [address]);
+  const router = useRouter();
 
   // 初始化并加载密码列表
   useEffect(() => {
-    const initializePasswords = async () => {
-      if (address && isAuthenticated) {
+    const loadData = async () => {
+      if (address) {
         try {
           const dataKey = await SessionUtils.getDataKey();
           if (dataKey) {
             await loadPasswords();
           } else {
-            setIsLocked(true);
-            messageApi.error('会话已锁定，请重新验证主密码');
+            router.push('/auth/verify');
           }
         } catch (error) {
           console.error('初始化密码列表失败:', error);
           messageApi.error('初始化密码列表失败');
-          onLogout();
+          router.push('/');
         }
       }
     };
 
-    initializePasswords();
-  }, [address, isAuthenticated]);
+    loadData();
+  }, [address]);
 
   const loadPasswords = async () => {
     if (!address) return;
@@ -94,7 +59,7 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
       const encryptedEntries = await response.json();
       const dataKey = await SessionUtils.getDataKey();
       if (!dataKey) {
-        setIsLocked(true);
+        router.push('/auth/verify');
         throw new Error('会话已锁定');
       }
 
@@ -114,7 +79,6 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
       );
 
       setPasswords(decryptedPasswords);
-      setIsLocked(false);
     } catch (error) {
       console.error('加载密码失败:', error);
       messageApi.error('加载密码失败');
@@ -127,7 +91,7 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
     try {
       const dataKey = await SessionUtils.getDataKey();
       if (!dataKey) {
-        setIsLocked(true);
+        router.push('/auth/verify');
         throw new Error('会话已锁定');
       }
 
@@ -197,62 +161,16 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
     setIsModalVisible(true);
   };
 
-  const handleAuthentication = (success: boolean) => {
-    if (success) {
-      setIsLocked(false);
-      onWalletConnection(true, address!);
-    }
-  };
-
   const handleDisconnect = () => {
     disconnect();
-    setIsUserExist(null);
-    setIsLocked(false);
     SessionUtils.clearWalletAddress();
     SessionUtils.clearDataKey();
-    if (onLogout) onLogout();
+    router.push('/');
   };
 
   const handleLock = () => {
-    setIsLocked(true);
-    setPasswords([]);
-  };
-
-  const renderContent = () => {
-    if (!address) {
-      return <ConnectWallet onConnection={onWalletConnection} />;
-    }
-
-    if (isLoading) {
-      return <div>正在检查用户状态...</div>;
-    }
-
-    if (isUserExist === null) {
-      return <div>正在加载...</div>;
-    }
-
-    if (!isAuthenticated || isLocked) {
-      return isUserExist ? (
-        <VerifyPassword onAuthentication={handleAuthentication} />
-      ) : (
-        <CreatePassword onAuthentication={handleAuthentication} />
-      );
-    }
-
-    return customContent || (
-      <Card>
-        <PasswordList
-          passwords={passwords}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onAdd={() => {
-            setEditingPassword(null);
-            form.resetFields();
-            setIsModalVisible(true);
-          }}
-        />
-      </Card>
-    );
+    SessionUtils.clearDataKey();
+    router.push('/auth/verify');
   };
 
   return (
@@ -260,11 +178,24 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
       {contextHolder}
       <AppLayout
         address={address}
-        onConnect={connect}
+        onConnect={() => router.push('/')}
         onDisconnect={handleDisconnect}
         onLock={handleLock}
       >
-        {renderContent()}
+        {customContent || (
+          <Card>
+            <PasswordList
+              passwords={passwords}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onAdd={() => {
+                setEditingPassword(null);
+                form.resetFields();
+                setIsModalVisible(true);
+              }}
+            />
+          </Card>
+        )}
         <Modal
           title={editingPassword ? '编辑密码' : '添加密码'}
           open={isModalVisible}
