@@ -211,6 +211,7 @@ export function PasswordManager({ customContent }: PasswordManagerProps) {
           <PasswordForm
             form={form}
             initialValues={editingPassword || undefined}
+            onFinish={handleSubmit}
           />
         </Modal>
       </AppLayout>
