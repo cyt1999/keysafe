@@ -1,82 +1,97 @@
 import { SessionData } from './types';
 
 export class SessionUtils {
-  private static readonly SESSION_KEY = 'keysafe_session';
+  private static readonly ADDRESS_KEY = 'keysafe_session_address';
+  private static readonly DATA_KEY_KEY = 'keysafe_session_data_key';
 
   /**
-   * 创建新会话
+   * 存储钱包地址
    */
-  static async createSession(address: string, dataKey: CryptoKey): Promise<void> {
-    try {
-      const sessionData: SessionData = {
-        address: address.toLowerCase(),
-        dataKey
-      };
+  static setWalletAddress(address: string): void {
+    sessionStorage.setItem(this.ADDRESS_KEY, address.toLowerCase());
+  }
 
+  /**
+   * 获取钱包地址
+   */
+  static getWalletAddress(): string | null {
+    return sessionStorage.getItem(this.ADDRESS_KEY);
+  }
+
+  /**
+   * 清除钱包地址
+   */
+  static clearWalletAddress(): void {
+    sessionStorage.removeItem(this.ADDRESS_KEY);
+  }
+
+  /**
+   * 存储数据加密密钥
+   */
+  static async setDataKey(dataKey: CryptoKey): Promise<void> {
+    try {
       // 导出密钥为原始字节数组
       const exportedKey = await crypto.subtle.exportKey('raw', dataKey);
       const keyArray = Array.from(new Uint8Array(exportedKey));
 
-      // 存储会话数据
-      sessionStorage.setItem(this.SESSION_KEY, JSON.stringify({
-        address: sessionData.address,
-        dataKey: keyArray
-      }));
+      // 存储加密密钥
+      sessionStorage.setItem(this.DATA_KEY_KEY, JSON.stringify(keyArray));
     } catch (error) {
-      console.error('创建会话失败:', error);
-      throw new Error('创建会话失败');
+      console.error('存储数据加密密钥失败:', error);
+      throw new Error('存储数据加密密钥失败');
     }
   }
 
   /**
-   * 获取当前会话
+   * 获取数据加密密钥
    */
-  static async getSession(): Promise<SessionData | null> {
-    const data = sessionStorage.getItem(this.SESSION_KEY);
+  static async getDataKey(): Promise<CryptoKey | null> {
+    const data = sessionStorage.getItem(this.DATA_KEY_KEY);
     if (!data) return null;
 
     try {
-      const { address, dataKey } = JSON.parse(data);
-      
+      const keyArray = JSON.parse(data);
       // 将数组转换回 Uint8Array
-      const keyData = new Uint8Array(dataKey);
+      const keyData = new Uint8Array(keyArray);
       
       // 导入密钥
-      const importedKey = await crypto.subtle.importKey(
+      return await crypto.subtle.importKey(
         'raw',
         keyData,
         { name: 'AES-GCM', length: 256 },
         true,
         ['encrypt', 'decrypt']
       );
-
-      return {
-        address,
-        dataKey: importedKey
-      };
     } catch (error) {
-      console.error('解析会话数据失败:', error);
+      console.error('获取数据加密密钥失败:', error);
       return null;
     }
   }
 
   /**
-   * 检查会话是否有效
+   * 清除数据加密密钥（锁定功能）
    */
-  static async isValidSession(): Promise<boolean> {
-    try {
-      const session = await this.getSession();
-      return session !== null;
-    } catch (error) {
-      console.error('检查会话状态失败:', error);
-      return false;
-    }
+  static clearDataKey(): void {
+    sessionStorage.removeItem(this.DATA_KEY_KEY);
   }
 
   /**
-   * 清除会话
+   * 检查是否已连接钱包（只检查地址）
    */
-  static clearSession(): void {
-    sessionStorage.removeItem(this.SESSION_KEY);
+  static isWalletConnected(): boolean {
+    return this.getWalletAddress() !== null;
+  }
+
+  /**
+   * 检查是否已解锁（检查加密密钥）
+   */
+  static async isUnlocked(): Promise<boolean> {
+    try {
+      const dataKey = await this.getDataKey();
+      return dataKey !== null;
+    } catch (error) {
+      console.error('检查解锁状态失败:', error);
+      return false;
+    }
   }
 } 

@@ -52,7 +52,7 @@ function VerifyPasswordContent({ onAuthentication }: VerifyPasswordProps) {
       const dataKey = await CryptoUtils.deriveDataKey(masterKey, signature);
       
       // 保存会话数据
-      await SessionUtils.createSession(address, dataKey);
+      await SessionUtils.setDataKey(dataKey);
 
       message.success('验证成功');
       onAuthentication(true);

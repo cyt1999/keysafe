@@ -12,20 +12,26 @@ export default function Home() {
   // 检查会话状态
   useEffect(() => {
     const checkSession = async () => {
-      if (walletAddress) {
-        const session = await SessionUtils.getSession();
-        setIsAuthenticated(!!session);
+      const address = SessionUtils.getWalletAddress();
+      if (address) {
+        setWalletAddress(address);
+        const dataKey = await SessionUtils.getDataKey();
+        setIsAuthenticated(!!dataKey);
+      } else {
+        setWalletAddress('');
+        setIsAuthenticated(false);
       }
     };
     checkSession();
-  }, [walletAddress]);
+  }, []);
 
   const handleWalletConnection = (connected: boolean, address: string) => {
     setWalletAddress(address);
   };
 
   const handleLogout = () => {
-    SessionUtils.clearSession();
+    SessionUtils.clearWalletAddress();
+    SessionUtils.clearDataKey();
     setIsAuthenticated(false);
     setWalletAddress('');
   };

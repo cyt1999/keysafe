@@ -41,7 +41,7 @@ function CreatePasswordContent({ onAuthentication }: CreatePasswordProps) {
       const dataKey = await CryptoUtils.deriveDataKey(masterKey, signature);
 
       // 保存会话数据
-      await SessionUtils.createSession(address, dataKey);
+      await SessionUtils.setDataKey(dataKey);
 
       // 保存验证数据到服务器
       const response = await fetch('/api/auth/create', {

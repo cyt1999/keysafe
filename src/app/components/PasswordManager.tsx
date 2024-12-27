@@ -29,6 +29,7 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
   const { address, connect, disconnect } = useWallet();
   const [isUserExist, setIsUserExist] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
 
   // 监听钱包连接状态
   useEffect(() => {
@@ -50,7 +51,6 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
         } finally {
           setIsLoading(false);
         }
-        onWalletConnection(true, address);
       } else {
         setIsUserExist(null);
       }
@@ -64,12 +64,12 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
     const initializePasswords = async () => {
       if (address && isAuthenticated) {
         try {
-          const session = await SessionUtils.getSession();
-          if (session?.dataKey) {
+          const dataKey = await SessionUtils.getDataKey();
+          if (dataKey) {
             await loadPasswords();
           } else {
-            messageApi.error('会话数据不完整，请重新登录');
-            onLogout();
+            setIsLocked(true);
+            messageApi.error('会话已锁定，请重新验证主密码');
           }
         } catch (error) {
           console.error('初始化密码列表失败:', error);
@@ -92,16 +92,17 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
       }
 
       const encryptedEntries = await response.json();
-      const session = await SessionUtils.getSession();
-      if (!session?.dataKey) {
-        throw new Error('未找到数据密钥');
+      const dataKey = await SessionUtils.getDataKey();
+      if (!dataKey) {
+        setIsLocked(true);
+        throw new Error('会话已锁定');
       }
 
       const decryptedPasswords = await Promise.all(
         encryptedEntries.map(async (entry: any) => {
           const decryptedData = await CryptoUtils.decryptPasswordEntry(
             entry.encryptedData,
-            session.dataKey
+            dataKey
           );
           return {
             id: entry.id,
@@ -113,6 +114,7 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
       );
 
       setPasswords(decryptedPasswords);
+      setIsLocked(false);
     } catch (error) {
       console.error('加载密码失败:', error);
       messageApi.error('加载密码失败');
@@ -123,9 +125,10 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
     if (!address) return;
 
     try {
-      const session = await SessionUtils.getSession();
-      if (!session?.dataKey) {
-        throw new Error('未找到数据密钥');
+      const dataKey = await SessionUtils.getDataKey();
+      if (!dataKey) {
+        setIsLocked(true);
+        throw new Error('会话已锁定');
       }
 
       const passwordData: PasswordData = {
@@ -138,7 +141,7 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
 
       const encryptedData = await CryptoUtils.encryptPasswordEntry(
         passwordData,
-        session.dataKey
+        dataKey
       );
 
       const endpoint = editingPassword ? '/api/passwords/update' : '/api/passwords/create';
@@ -196,6 +199,7 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
 
   const handleAuthentication = (success: boolean) => {
     if (success) {
+      setIsLocked(false);
       onWalletConnection(true, address!);
     }
   };
@@ -203,8 +207,15 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
   const handleDisconnect = () => {
     disconnect();
     setIsUserExist(null);
-    SessionUtils.clearSession();
+    setIsLocked(false);
+    SessionUtils.clearWalletAddress();
+    SessionUtils.clearDataKey();
     if (onLogout) onLogout();
+  };
+
+  const handleLock = () => {
+    setIsLocked(true);
+    setPasswords([]);
   };
 
   const renderContent = () => {
@@ -220,7 +231,7 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
       return <div>正在加载...</div>;
     }
 
-    if (!isAuthenticated) {
+    if (!isAuthenticated || isLocked) {
       return isUserExist ? (
         <VerifyPassword onAuthentication={handleAuthentication} />
       ) : (
@@ -251,6 +262,7 @@ export function PasswordManager({ onWalletConnection, isAuthenticated, onLogout 
         address={address}
         onConnect={connect}
         onDisconnect={handleDisconnect}
+        onLock={handleLock}
       >
         {renderContent()}
         <Modal

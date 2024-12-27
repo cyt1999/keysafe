@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Layout, Typography, Space, Button, Tag, Avatar } from 'antd';
 import { LockOutlined, WalletOutlined, UserOutlined } from '@ant-design/icons';
+import { SessionUtils } from '@/utils/sessionUtils';
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
@@ -38,10 +39,12 @@ interface AppLayoutProps {
   address: string | null;
   onConnect: () => void;
   onDisconnect: () => void;
+  onLock?: () => void;
 }
 
-export function AppLayout({ children, address, onConnect, onDisconnect }: AppLayoutProps) {
+export function AppLayout({ children, address, onConnect, onDisconnect, onLock }: AppLayoutProps) {
   const [avatar, setAvatar] = useState<string | null>(null);
+  const [isUnlocked, setIsUnlocked] = useState(true);
 
   useEffect(() => {
     if (address) {
@@ -51,6 +54,24 @@ export function AppLayout({ children, address, onConnect, onDisconnect }: AppLay
       setAvatar(null);
     }
   }, [address]);
+
+  useEffect(() => {
+    const checkLockStatus = async () => {
+      if (address) {
+        const unlocked = await SessionUtils.isUnlocked();
+        setIsUnlocked(unlocked);
+      } else {
+        setIsUnlocked(false);
+      }
+    };
+    checkLockStatus();
+  }, [address]);
+
+  const handleLock = () => {
+    SessionUtils.clearDataKey();
+    setIsUnlocked(false);
+    if (onLock) onLock();
+  };
 
   return (
     <Layout className="layout">
@@ -62,19 +83,30 @@ export function AppLayout({ children, address, onConnect, onDisconnect }: AppLay
         <Space>
           {address ? (
             <div className="user-info">
-              <Tag 
-                icon={<WalletOutlined />} 
-                color="success"
-                onClick={onDisconnect}
-                title="点击断开连接"
-              >
-                {`${address.slice(0, 6)}...${address.slice(-4)}`}
-              </Tag>
-              <Avatar 
-                size={40}
-                icon={<UserOutlined />}
-                src={avatar}
-              />
+              <Space>
+                {isUnlocked && (
+                  <Button 
+                    icon={<LockOutlined />} 
+                    onClick={handleLock}
+                    title="锁定密码库"
+                  >
+                    锁定
+                  </Button>
+                )}
+                <Tag 
+                  icon={<WalletOutlined />} 
+                  color="success"
+                  onClick={onDisconnect}
+                  title="点击断开连接"
+                >
+                  {`${address.slice(0, 6)}...${address.slice(-4)}`}
+                </Tag>
+                <Avatar 
+                  size={40}
+                  icon={<UserOutlined />}
+                  src={avatar}
+                />
+              </Space>
             </div>
           ) : (
             <Button type="primary" icon={<WalletOutlined />} onClick={onConnect}>
