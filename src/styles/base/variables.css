@@ -13,6 +13,9 @@
   --color-text-primary: #2C3E50;    /* 主要文字 */
   --color-text-secondary: #00854D;  /* 次要文字 */
   --color-text-light: #FFFFFF;      /* 浅色文字 */
+  --color-text-dark: rgba(0, 0, 0, 0.88);    /* 深色文字 */
+  --color-text-secondary-dark: rgba(0, 0, 0, 0.45);  /* 次要深色文字 */
+
   
   /* 背景颜色 */
   --color-bg-primary: #FFFFFF;      /* 主背景（header背景） */

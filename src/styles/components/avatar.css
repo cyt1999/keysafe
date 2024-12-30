@@ -1,31 +1,44 @@
-/* 头像样式 */
+/* 基础头像样式 */
 .ant-avatar {
+  /* 添加绿色边框 */
   border: 2px solid var(--color-primary-border);
+  /* 设置渐变背景 */
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+  /* 设置图标颜色为白色 */
   color: var(--color-text-light);
+  /* 设置字重 */
   font-weight: var(--font-weight-medium);
 }
 
-/* 用户信息区域样式 */
+/* 用户信息区域样式 - 用于布局头像和文本 */
 .user-info {
   display: flex;
   align-items: center;
+  /* 设置元素间距 */
   gap: 6px;
 }
 
+/* 用户信息区域中的头像特定样式 */
 .user-info .ant-avatar {
+  /* 防止头像被压缩 */
   flex-shrink: 0;
   border: 2px solid var(--color-primary-border);
   background: var(--color-primary-light);
+  /* 添加过渡动画效果 */
   transition: var(--transition-base);
   font-size: 20px;
 }
 
+/* 头像悬停效果 */
 .user-info .ant-avatar:hover {
+  /* 悬停时放大效果 */
   transform: scale(1.05);
+  /* 悬停时边框颜色加深 */
   border-color: var(--color-primary);
 }
 
+/* 头像中的图标样式 */
 .user-info .ant-avatar .anticon {
+  /* 设置图标大小 */
   font-size: 22px;
-} 
+}

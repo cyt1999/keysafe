@@ -1,0 +1,44 @@
+/* 下拉菜单中的用户信息区域 - 用于布局头像和文本信息 */
+.user-dropdown-info {
+  display: flex;
+  align-items: center;
+  /* 设置头像和文本之间的间距 */
+  gap: var(--spacing-md);
+  /* 设置上下内边距 */
+  padding: var(--spacing-xs) 0;
+}
+
+/* 文本区域容器 - 包含用户名和钱包地址 */
+.user-dropdown-text {
+  /* 占据剩余空间 */
+  flex: 1;
+}
+
+/* 用户名样式 */
+.user-dropdown-username {
+  /* 设置字体大小和字重 */
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  /* 设置与钱包地址的间距 */
+  margin-bottom: var(--spacing-xs);
+  /* 使用深色文字突出显示 */
+  color: var(--color-text-dark);
+}
+
+/* 钱包地址样式 */
+.user-dropdown-address {
+  /* 设置较小的字体大小 */
+  font-size: var(--font-size-sm);
+  /* 使用次要文字颜色 */
+  color: var(--color-text-secondary-dark);
+  /* 布局钱包图标和地址文本 */
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* 钱包地址中的图标样式 */
+.user-dropdown-address .anticon {
+  /* 设置图标大小，保持与文字协调 */
+  font-size: var(--font-size-sm);
+} 

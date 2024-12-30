@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Layout, Typography, Space, Button, Tag, Avatar, Dropdown } from 'antd';
-import { LockOutlined, WalletOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import { Layout, Typography, Space, Button } from 'antd';
+import { WalletOutlined } from '@ant-design/icons';
 import { SessionUtils } from '@/utils/sessionUtils';
 import { LogoIcon } from '@/components/common/Logo';
+import { UserDropdown } from '@/components/specific/auth/UserDropdown';
 
 const { Header, Content } = Layout;
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -48,24 +49,6 @@ export function AppLayout({ children, address, onConnect, onDisconnect, onLock }
     if (onLock) onLock();
   };
 
-  const dropdownItems = {
-    items: [
-      {
-        key: 'lock',
-        icon: <LockOutlined />,
-        label: '锁定',
-        onClick: handleLock,
-        disabled: !isUnlocked
-      },
-      {
-        key: 'logout',
-        icon: <LogoutOutlined />,
-        label: '注销',
-        onClick: onDisconnect
-      },
-    ],
-  };
-
   return (
     <Layout className="layout">
       <Header className="header">
@@ -73,25 +56,16 @@ export function AppLayout({ children, address, onConnect, onDisconnect, onLock }
           <LogoIcon />
           <span className="logo-text">KeySafe</span>
         </div>
-        <Space>
+        <Space size="middle">
           {address ? (
             <div className="user-info">
-              <Space>
-                <Tag 
-                  icon={<WalletOutlined />} 
-                  color="success"
-                >
-                  {`${address.slice(0, 6)}...${address.slice(-4)}`}
-                </Tag>
-                <Dropdown menu={dropdownItems} placement="bottomRight">
-                  <Avatar 
-                    size={50}
-                    icon={<UserOutlined />}
-                    src={avatar}
-                    style={{ cursor: 'pointer' }}
-                  />
-                </Dropdown>
-              </Space>
+              <UserDropdown 
+                address={address}
+                avatar={avatar}
+                isUnlocked={isUnlocked}
+                onLock={handleLock}
+                onDisconnect={onDisconnect}
+              />
             </div>
           ) : (
             <Button type="primary" icon={<WalletOutlined />} onClick={onConnect}>
