@@ -7,10 +7,9 @@ import { useRouter } from 'next/navigation';
 import { useWallet } from '@/hooks/useWallet';
 import { CryptoUtils } from '@/utils/cryptoUtils';
 import { SessionUtils } from '@/utils/sessionUtils';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 const { Title, Text } = Typography;
-
-interface CreatePasswordProps {}
 
 function CreatePasswordContent() {
   const [form] = Form.useForm();
@@ -83,96 +82,108 @@ function CreatePasswordContent() {
     }
   };
 
+  const handleDisconnect = () => {
+    SessionUtils.clearWalletAddress();
+    router.push('/');
+  };
+
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      minHeight: '100vh',
-      padding: '2rem'
-    }}>
-      <Space direction="vertical" size="large" style={{ width: '100%', maxWidth: '400px' }}>
-        <div style={{ textAlign: 'center' }}>
-          <Title level={2}>设置主密码</Title>
-          <Text>
-            请设置一个安全的主密码，它将用于加密您的所有数据。
-            请确保记住个密码，因为它无法找回。
-          </Text>
-        </div>
+    <AppLayout
+      address={address}
+      onConnect={() => router.push('/')}
+      onDisconnect={handleDisconnect}
+    >
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        flex: 1,
+        padding: '2rem',
+        overflow: 'hidden'
+      }}>
+        <Space direction="vertical" size="large" style={{ width: '100%', maxWidth: '400px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <Title level={2}>设置主密码</Title>
+            <Text>
+              请设置一个安全的主密码，它将用于加密您的所有数据。
+              请确保记住此密码，因为它无法找回。
+            </Text>
+          </div>
 
-        <Form
-          form={form}
-          onFinish={handleSubmit}
-          layout="vertical"
-          requiredMark={false}
-        >
-          <Form.Item
-            name="password"
-            label="主密码"
-            rules={[
-              { required: true, message: '请输入主密码' },
-              { min: 8, message: '密码长度少为8位' },
-              {
-                pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
-                message: '密码必须包含大小写字母和数字'
-              }
-            ]}
+          <Form
+            form={form}
+            onFinish={handleSubmit}
+            layout="vertical"
+            requiredMark={false}
           >
-            <Input.Password 
-              prefix={<LockOutlined />}
-              placeholder="请输入主密码"
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="confirmPassword"
-            label="确认密码"
-            dependencies={['password']}
-            rules={[
-              { required: true, message: '请确认主密码' },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue('password') === value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error('两次输入的密码不一致'));
-                },
-              }),
-            ]}
-          >
-            <Input.Password
-              prefix={<LockOutlined />}
-              placeholder="请再次输入主密码"
-            />
-          </Form.Item>
-
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              block
+            <Form.Item
+              name="password"
+              label="主密码"
+              rules={[
+                { required: true, message: '请输入主密码' },
+                { min: 8, message: '密码长度少为8位' },
+                {
+                  pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
+                  message: '密码必须包含大小写字母和数字'
+                }
+              ]}
             >
-              设置主密码
-            </Button>
-          </Form.Item>
-        </Form>
-      </Space>
-    </div>
+              <Input.Password 
+                prefix={<LockOutlined />}
+                placeholder="请输入主密码"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="confirmPassword"
+              label="确认密码"
+              dependencies={['password']}
+              rules={[
+                { required: true, message: '请确认主密码' },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('password') === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error('两次输入的密码不一致'));
+                  },
+                }),
+              ]}
+            >
+              <Input.Password
+                prefix={<LockOutlined />}
+                placeholder="请再次输入主密码"
+              />
+            </Form.Item>
+
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                block
+              >
+                设置主密码
+              </Button>
+            </Form.Item>
+          </Form>
+        </Space>
+      </div>
+    </AppLayout>
   );
 }
 
 export default function CreatePassword() {
   return (
-    <App>
-      <ConfigProvider
-        theme={{
-          algorithm: theme.defaultAlgorithm,
-        }}
-      >
+    <ConfigProvider
+      theme={{
+        algorithm: theme.defaultAlgorithm,
+      }}
+    >
+      <App>
         <CreatePasswordContent />
-      </ConfigProvider>
-    </App>
+      </App>
+    </ConfigProvider>
   );
 } 

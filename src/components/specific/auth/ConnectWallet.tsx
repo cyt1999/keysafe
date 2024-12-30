@@ -5,6 +5,7 @@ import { Button, Typography, Space, message } from 'antd';
 import { WalletOutlined, LockOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@/hooks/useWallet';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 const { Title, Text } = Typography;
 
@@ -34,20 +35,20 @@ export default function ConnectWallet() {
   };
 
   return (
-    <>
+    <AppLayout
+      address={null}
+      onConnect={handleConnect}
+      onDisconnect={() => {}}
+    >
       {contextHolder}
       <div style={{ 
         display: 'flex', 
         flexDirection: 'column', 
         alignItems: 'center', 
         justifyContent: 'center', 
-        height: '100%',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        padding: '2rem'
+        flex: 1,
+        padding: '2rem',
+        overflow: 'hidden'
       }}>
         <Space direction="vertical" size="large" align="center" style={{ maxWidth: '100%' }}>
           <LockOutlined style={{ fontSize: '64px', color: '#00B96B' }} />
@@ -85,6 +86,6 @@ export default function ConnectWallet() {
           </Button>
         </Space>
       </div>
-    </>
+    </AppLayout>
   );
 } 

@@ -7,10 +7,9 @@ import { useRouter } from 'next/navigation';
 import { useWallet } from '@/hooks/useWallet';
 import { CryptoUtils } from '@/utils/cryptoUtils';
 import { SessionUtils } from '@/utils/sessionUtils';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 const { Title, Text } = Typography;
-
-interface VerifyPasswordProps {}
 
 function VerifyPasswordContent() {
   const [form] = Form.useForm();
@@ -65,68 +64,80 @@ function VerifyPasswordContent() {
     }
   };
 
+  const handleDisconnect = () => {
+    SessionUtils.clearWalletAddress();
+    router.push('/');
+  };
+
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      minHeight: '100vh',
-      padding: '2rem'
-    }}>
-      <Space direction="vertical" size="large" style={{ width: '100%', maxWidth: '400px' }}>
-        <div style={{ textAlign: 'center' }}>
-          <Title level={2}>验证主密码</Title>
-          <Text>
-            请输入您的主密码以访问密码库。
-          </Text>
-        </div>
+    <AppLayout
+      address={address}
+      onConnect={() => router.push('/')}
+      onDisconnect={handleDisconnect}
+    >
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        flex: 1,
+        padding: '2rem',
+        overflow: 'hidden'
+      }}>
+        <Space direction="vertical" size="large" style={{ width: '100%', maxWidth: '400px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <Title level={2}>验证主密码</Title>
+            <Text>
+              请输入您的主密码以访问密码库。
+            </Text>
+          </div>
 
-        <Form
-          form={form}
-          onFinish={handleSubmit}
-          layout="vertical"
-          requiredMark={false}
-        >
-          <Form.Item
-            name="password"
-            label="主密码"
-            rules={[
-              { required: true, message: '请输入主密码' }
-            ]}
+          <Form
+            form={form}
+            onFinish={handleSubmit}
+            layout="vertical"
+            requiredMark={false}
           >
-            <Input.Password 
-              prefix={<LockOutlined />}
-              placeholder="请输入主密码"
-            />
-          </Form.Item>
-
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              block
+            <Form.Item
+              name="password"
+              label="主密码"
+              rules={[
+                { required: true, message: '请输入主密码' }
+              ]}
             >
-              验证密码
-            </Button>
-          </Form.Item>
-        </Form>
-      </Space>
-    </div>
+              <Input.Password 
+                prefix={<LockOutlined />}
+                placeholder="请输入主密码"
+              />
+            </Form.Item>
+
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                block
+              >
+                验证密码
+              </Button>
+            </Form.Item>
+          </Form>
+        </Space>
+      </div>
+    </AppLayout>
   );
 }
 
 export default function VerifyPassword() {
   return (
-    <App>
-      <ConfigProvider
-        theme={{
-          algorithm: theme.defaultAlgorithm,
-        }}
-      >
+    <ConfigProvider
+      theme={{
+        algorithm: theme.defaultAlgorithm,
+      }}
+    >
+      <App>
         <VerifyPasswordContent />
-      </ConfigProvider>
-    </App>
+      </App>
+    </ConfigProvider>
   );
 } 
