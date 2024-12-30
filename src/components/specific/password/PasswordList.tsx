@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Table, Button, Space, Input, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { EditOutlined, DeleteOutlined, PlusOutlined, CopyOutlined, LinkOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, PlusOutlined, CopyOutlined, LinkOutlined, EyeOutlined } from '@ant-design/icons';
 import { PasswordEntry } from '@/utils/types';
 import { WebsiteIcon } from '@/components/common/WebsiteIcon';
 
@@ -14,9 +14,10 @@ interface PasswordListProps {
   onEdit: (password: PasswordEntry) => void;
   onDelete: (id: string) => void;
   onAdd: () => void;
+  onView: (password: PasswordEntry) => void;
 }
 
-export function PasswordList({ passwords, onEdit, onDelete, onAdd }: PasswordListProps) {
+export function PasswordList({ passwords, onEdit, onDelete, onAdd, onView }: PasswordListProps) {
   const [searchText, setSearchText] = useState('');
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -104,6 +105,11 @@ export function PasswordList({ passwords, onEdit, onDelete, onAdd }: PasswordLis
       key: 'action',
       render: (_, record) => (
         <Space size="middle">
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            onClick={() => onView(record)}
+          />
           <Button
             type="text"
             icon={<EditOutlined />}

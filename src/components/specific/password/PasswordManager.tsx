@@ -10,6 +10,7 @@ import { SessionUtils } from '@/utils/sessionUtils';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PasswordList } from '@/components/specific/password/PasswordList';
 import { PasswordForm } from '@/components/specific/password/PasswordForm';
+import { PasswordDetail } from '@/components/specific/password/PasswordDetail';
 
 interface PasswordManagerProps {
   customContent?: React.ReactNode;
@@ -20,6 +21,7 @@ export function PasswordManager({ customContent }: PasswordManagerProps) {
   const [passwords, setPasswords] = useState<PasswordEntry[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingPassword, setEditingPassword] = useState<PasswordEntry | null>(null);
+  const [viewingPassword, setViewingPassword] = useState<PasswordEntry | null>(null);
   const [form] = Form.useForm();
   const { address, disconnect } = useWallet();
   const [isLoading, setIsLoading] = useState(false);
@@ -173,6 +175,10 @@ export function PasswordManager({ customContent }: PasswordManagerProps) {
     router.push('/auth/verify');
   };
 
+  const handleView = (password: PasswordEntry) => {
+    setViewingPassword(password);
+  };
+
   return (
     <>
       {contextHolder}
@@ -193,6 +199,7 @@ export function PasswordManager({ customContent }: PasswordManagerProps) {
                 form.resetFields();
                 setIsModalVisible(true);
               }}
+              onView={handleView}
             />
           </Card>
         )}
@@ -214,6 +221,11 @@ export function PasswordManager({ customContent }: PasswordManagerProps) {
             onFinish={handleSubmit}
           />
         </Modal>
+        <PasswordDetail
+          password={viewingPassword}
+          open={!!viewingPassword}
+          onClose={() => setViewingPassword(null)}
+        />
       </AppLayout>
     </>
   );
