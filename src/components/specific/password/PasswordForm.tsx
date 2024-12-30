@@ -5,7 +5,6 @@ import { Form, Input, Button, Slider, Checkbox, Space } from 'antd';
 import { LockOutlined, GlobalOutlined, UserOutlined, RedoOutlined, EyeOutlined, EyeInvisibleOutlined, TagOutlined } from '@ant-design/icons';
 import { PasswordEntry } from '@/utils/types';
 import { PasswordGenerator as Generator } from '@/utils/passwordGenerator';
-import { AppLayout } from '@/components/layout/AppLayout';
 import '@/styles/components/password/PasswordForm.css';
 
 interface PasswordFormProps {
@@ -120,90 +119,84 @@ export function PasswordForm({ form, initialValues, onFinish }: PasswordFormProp
   };
 
   return (
-    <AppLayout
-      address={null}
-      onConnect={() => {}}
-      onDisconnect={() => {}}
+    <Form
+      form={form}
+      layout="vertical"
+      initialValues={initialValues || {}}
+      onFinish={onFinish}
+      className="password-form"
     >
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={initialValues || {}}
-        onFinish={onFinish}
-        className="password-form"
+      <Form.Item
+        name="title"
+        label="标题"
+        rules={[{ required: true, message: '请输入标题' }]}
       >
-        <Form.Item
-          name="title"
-          label="标题"
-          rules={[{ required: true, message: '请输入标题' }]}
-        >
-          <Input 
-            placeholder="请输入网站或应用名称"
-            prefix={<TagOutlined className="site-form-item-icon" />}
-          />
-        </Form.Item>
-        <Form.Item
-          name="username"
-          label="用户名"
-          rules={[{ required: true, message: '请输入用户名' }]}
-        >
-          <Input 
-            placeholder="请输入用户名"
-            prefix={<UserOutlined className="site-form-item-icon" />}
-          />
-        </Form.Item>
-        <Form.Item
-          name="password"
-          label="密码"
-          rules={[{ required: true, message: '请输入密码' }]}
-        >
-          <Input.Password 
-            placeholder="请输入密码"
-            prefix={<LockOutlined className="site-form-item-icon" />}
-            iconRender={(visible) => (
-              <Space size={4}>
-                {visible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
-                <div style={{ width: 1, height: 14, background: '#d9d9d9', margin: '0 4px' }} />
-                <Button
-                  type="text"
-                  icon={<RedoOutlined />}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    generatorRef.generatePassword();
-                  }}
-                  className="generate-password-btn"
-                  style={{ height: 24, width: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                />
-              </Space>
-            )}
-          />
-        </Form.Item>
+        <Input 
+          placeholder="请输入网站或应用名称"
+          prefix={<TagOutlined className="site-form-item-icon" />}
+        />
+      </Form.Item>
+      <Form.Item
+        name="username"
+        label="用户名"
+        rules={[{ required: true, message: '请输入用户名' }]}
+      >
+        <Input 
+          placeholder="请输入用户名"
+          prefix={<UserOutlined className="site-form-item-icon" />}
+        />
+      </Form.Item>
+      <Form.Item
+        name="password"
+        label="密码"
+        rules={[{ required: true, message: '请输入密码' }]}
+      >
+        <Input.Password 
+          placeholder="请输入密码"
+          prefix={<LockOutlined className="site-form-item-icon" />}
+          iconRender={(visible) => (
+            <Space size={4}>
+              {visible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+              <div style={{ width: 1, height: 14, background: '#d9d9d9', margin: '0 4px' }} />
+              <Button
+                type="text"
+                icon={<RedoOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  generatorRef.generatePassword();
+                }}
+                className="generate-password-btn"
+                style={{ height: 24, width: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              />
+            </Space>
+          )}
+        />
+      </Form.Item>
 
-        <div className="password-generator-settings">
-          <PasswordGeneratorComponent 
-            onGenerate={handleGeneratePassword}
-            ref={ref => {
-              if (ref) {
-                generatorRef.generatePassword = ref.generatePassword;
-              }
-            }}
-          />
-        </div>
+      <div className="password-generator-settings">
+        <PasswordGeneratorComponent 
+          onGenerate={handleGeneratePassword}
+          ref={ref => {
+            if (ref) {
+              generatorRef.generatePassword = ref.generatePassword;
+            }
+          }}
+        />
+      </div>
 
-        <Form.Item name="website" label="网站">
-          <Input 
-            placeholder="请输入网站地址（可选）"
-            prefix={<GlobalOutlined className="site-form-item-icon" />}
-          />
-        </Form.Item>
-        <Form.Item name="notes" label="备注">
-          <Input.TextArea 
-            placeholder="请输入备注（可选）"
-            autoSize={{ minRows: 2, maxRows: 6 }}
-          />
-        </Form.Item>
-      </Form>
-    </AppLayout>
+      <Form.Item name="website" label="网站">
+        <Input 
+          placeholder="请输入网站地址（可选）"
+          prefix={<GlobalOutlined className="site-form-item-icon" />}
+        />
+      </Form.Item>
+      <Form.Item name="notes" label="备注">
+        <Input.TextArea 
+          placeholder="请输入备注（可选）"
+          autoSize={{ minRows: 2, maxRows: 6 }}
+        />
+      </Form.Item>
+    </Form>
   );
 }
