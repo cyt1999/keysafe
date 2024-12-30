@@ -67,7 +67,7 @@ export function AppLayout({ children, address, onConnect, onDisconnect, onLock }
   };
 
   return (
-    <Layout className="layout" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Layout className="layout">
       <Header className="header">
         <div className="logo-container">
           <LogoIcon />
@@ -100,9 +100,11 @@ export function AppLayout({ children, address, onConnect, onDisconnect, onLock }
           )}
         </Space>
       </Header>
-      <Content style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {children}
-      </Content>
+      <div className="content-wrapper">
+        <Content className="content">
+          {children}
+        </Content>
+      </div>
     </Layout>
   );
 } 
