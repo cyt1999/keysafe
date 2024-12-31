@@ -1,11 +1,9 @@
 import { PrismaClient, Prisma } from '@prisma/client';
-import { IPFSService } from '@/utils/ipfsService';
+import { IPFSService } from './IPFSService';
 
 type PasswordEntryData = {
   id: string;
   encryptedData: string;
-  iv: string;
-  authTag: string;
   version: number;
   updatedAt: string;
 };
@@ -35,8 +33,6 @@ export class SyncService {
         select: {
           id: true,
           encryptedData: true,
-          iv: true,
-          authTag: true,
           version: true,
           updatedAt: true,
         },
@@ -47,8 +43,6 @@ export class SyncService {
         passwords: passwords.map((p) => ({
           id: p.id,
           encryptedData: p.encryptedData,
-          iv: p.iv,
-          authTag: p.authTag,
           version: p.version,
           updatedAt: p.updatedAt.toISOString(),
         })),
@@ -57,18 +51,45 @@ export class SyncService {
       // 上传到IPFS
       const result = await this.ipfsService.uploadData(syncData, userId);
 
-      // 创建DataCid记录
-      await this.prisma.dataCid.create({
-        data: {
+      // 更新同步状态
+      await this.prisma.passwordSync.upsert({
+        where: { userId },
+        create: {
           userId,
-          cid: result.cid,
-          type: 'PASSWORDS',
-          status: 'ACTIVE',
+          lastSyncedAt: new Date(),
+          lastSyncedCid: result.cid,
+          syncStatus: 'COMPLETED'
         },
+        update: {
+          lastSyncedAt: new Date(),
+          lastSyncedCid: result.cid,
+          syncStatus: 'COMPLETED',
+          retryCount: 0,
+          lastError: null
+        }
       });
 
       return result.cid;
     } catch (error) {
+      // 更新同步失败状态
+      await this.prisma.passwordSync.upsert({
+        where: { userId },
+        create: {
+          userId,
+          lastSyncedAt: new Date(),
+          syncStatus: 'FAILED',
+          lastError: error instanceof Error ? error.message : '未知错误'
+        },
+        update: {
+          lastSyncedAt: new Date(),
+          syncStatus: 'FAILED',
+          retryCount: {
+            increment: 1
+          },
+          lastError: error instanceof Error ? error.message : '未知错误'
+        }
+      });
+
       console.error('同步到IPFS失败:', error);
       throw new Error('同步到IPFS失败');
     }
@@ -97,15 +118,50 @@ export class SyncService {
               id: password.id,
               userId,
               encryptedData: password.encryptedData,
-              iv: password.iv,
-              authTag: password.authTag,
               version: password.version,
               updatedAt: new Date(password.updatedAt),
             },
           });
         }
+
+        // 更新同步状态
+        await tx.passwordSync.upsert({
+          where: { userId },
+          create: {
+            userId,
+            lastSyncedAt: new Date(),
+            lastSyncedCid: cid,
+            syncStatus: 'COMPLETED'
+          },
+          update: {
+            lastSyncedAt: new Date(),
+            lastSyncedCid: cid,
+            syncStatus: 'COMPLETED',
+            retryCount: 0,
+            lastError: null
+          }
+        });
       });
     } catch (error) {
+      // 更新同步失败状态
+      await this.prisma.passwordSync.upsert({
+        where: { userId },
+        create: {
+          userId,
+          lastSyncedAt: new Date(),
+          syncStatus: 'FAILED',
+          lastError: error instanceof Error ? error.message : '未知错误'
+        },
+        update: {
+          lastSyncedAt: new Date(),
+          syncStatus: 'FAILED',
+          retryCount: {
+            increment: 1
+          },
+          lastError: error instanceof Error ? error.message : '未知错误'
+        }
+      });
+
       console.error('从IPFS恢复数据失败:', error);
       throw new Error('从IPFS恢复数据失败');
     }
