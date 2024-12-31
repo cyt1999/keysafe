@@ -1,44 +1,76 @@
-/* 下拉菜单中的用户信息区域 - 用于布局头像和文本信息 */
+/* 用户下拉菜单样式 */
+
+/* 用户信息区域的基本布局 */
 .user-dropdown-info {
   display: flex;
   align-items: center;
   /* 设置头像和文本之间的间距 */
   gap: var(--spacing-md);
-  /* 设置上下内边距 */
+  /* 设置内边距 */
   padding: var(--spacing-xs) 0;
 }
 
-/* 文本区域容器 - 包含用户名和钱包地址 */
+/* 文本区域容器样式 */
 .user-dropdown-text {
-  /* 占据剩余空间 */
+  /* 使文本区域占据剩余空间 */
   flex: 1;
 }
 
-/* 用户名样式 */
+/* 用户名称样式 */
 .user-dropdown-username {
-  /* 设置字体大小和字重 */
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
-  /* 设置与钱包地址的间距 */
   margin-bottom: var(--spacing-xs);
-  /* 使用深色文字突出显示 */
+  /* 使用主要文本颜色 */
   color: var(--color-text-dark);
 }
 
-/* 钱包地址样式 */
+/* 钱包地址区域样式 */
 .user-dropdown-address {
-  /* 设置较小的字体大小 */
   font-size: var(--font-size-sm);
-  /* 使用次要文字颜色 */
+  /* 使用次要文本颜色 */
   color: var(--color-text-secondary-dark);
-  /* 布局钱包图标和地址文本 */
+  /* 图标和地址的水平布局 */
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
 }
 
-/* 钱包地址中的图标样式 */
+/* 钱包地址图标样式 */
 .user-dropdown-address .anticon {
-  /* 设置图标大小，保持与文字协调 */
   font-size: var(--font-size-sm);
+}
+
+/* IPFS同步信息区域样式 */
+.user-dropdown-sync {
+  /* 与上方内容的间距 */
+  margin-top: 8px;
+  font-size: 12px;
+  /* 使用较浅的文本颜色 */
+  color: rgba(0, 0, 0, 0.65);
+}
+
+/* 同步状态行样式 */
+.user-dropdown-sync .sync-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* CID显示样式 */
+.user-dropdown-sync .sync-cid {
+  margin-top: 2px;
+  /* 使用等宽字体以便更好地显示CID */
+  font-family: monospace;
+  /* 添加指针样式表示可以查看完整CID */
+  cursor: pointer;
+}
+
+/* 同步时间样式 */
+.user-dropdown-sync .sync-time {
+  margin-top: 2px;
+  /* 使用更小的字体 */
+  font-size: 11px;
+  /* 使用最浅的文本颜色 */
+  color: rgba(0, 0, 0, 0.45);
 } 

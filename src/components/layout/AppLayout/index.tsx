@@ -6,6 +6,7 @@ import { WalletOutlined } from '@ant-design/icons';
 import { SessionUtils } from '@/utils/sessionUtils';
 import { LogoIcon } from '@/components/common/Logo';
 import { UserDropdown } from '@/components/specific/auth/UserDropdown';
+import { useSyncStatus } from '@/hooks/useSyncStatus';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -18,9 +19,14 @@ interface AppLayoutProps {
   onLock?: () => void;
 }
 
+/**
+ * 应用程序布局组件
+ * 包含顶部导航栏和主要内容区域
+ */
 export function AppLayout({ children, address, onConnect, onDisconnect, onLock }: AppLayoutProps) {
   const [avatar, setAvatar] = useState<string | null>(null);
   const [isUnlocked, setIsUnlocked] = useState(true);
+  const { syncInfo } = useSyncStatus();
 
   useEffect(() => {
     if (address) {
@@ -59,10 +65,11 @@ export function AppLayout({ children, address, onConnect, onDisconnect, onLock }
         <Space size="middle">
           {address ? (
             <div className="user-info">
-              <UserDropdown 
+              <UserDropdown
                 address={address}
                 avatar={avatar}
                 isUnlocked={isUnlocked}
+                syncInfo={syncInfo || undefined}
                 onLock={handleLock}
                 onDisconnect={onDisconnect}
               />
