@@ -9,6 +9,27 @@ import { WebsiteIcon } from '@/components/common/WebsiteIcon';
 
 const { Search } = Input;
 
+// 格式化URL显示
+const formatUrl = (url: string): string => {
+  if (!url) return '-';
+  try {
+    const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+    const hostname = urlObj.hostname;
+    // 移除开头的 www. 如果存在
+    const cleanHostname = hostname.replace(/^www\./, '');
+    return cleanHostname + '...';
+  } catch (error) {
+    // 如果URL解析失败，返回原始值
+    return url;
+  }
+};
+
+// 格式化用户名显示
+const formatUsername = (username: string, maxLength: number = 8): string => {
+  if (!username) return '-';
+  return username.length > maxLength ? `${username.slice(0, maxLength)}...` : username;
+};
+
 interface PasswordListProps {
   passwords: PasswordEntry[];
   onEdit: (password: PasswordEntry) => void;
@@ -59,7 +80,7 @@ export function PasswordList({ passwords, onEdit, onDelete, onAdd, onView }: Pas
       key: 'username',
       render: (text: string) => (
         <Space>
-          <span>{text}</span>
+          <span title={text}>{formatUsername(text)}</span>
           <Button
             type="text"
             icon={<CopyOutlined />}
@@ -89,7 +110,7 @@ export function PasswordList({ passwords, onEdit, onDelete, onAdd, onView }: Pas
       key: 'website',
       render: (text: string) => (
         <Space>
-          <span>{text || '-'}</span>
+          <span>{formatUrl(text)}</span>
           {text && (
             <Button
               type="text"
