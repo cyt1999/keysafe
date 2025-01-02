@@ -170,7 +170,7 @@ export function PasswordList({ passwords, onEdit, onDelete, onAdd, onView }: Pas
           columns={columns}
           dataSource={passwords}
           rowKey="id"
-          pagination={{ pageSize: 10 }}
+          pagination={{ pageSize: 8 }}
         />
       </div>
     </>
