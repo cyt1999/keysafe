@@ -54,8 +54,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     return res.status(200).json({ 
-      success: true,
-      avatar: avatarBase64 
+      id: user.id,
+      address: user.walletAddress,
+      avatar: user.avatar,
+      nickname: user.nickname
     });
   } catch (error) {
     console.error('创建用户失败:', error);

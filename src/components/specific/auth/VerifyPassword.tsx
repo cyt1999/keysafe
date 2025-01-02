@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useWallet } from '@/hooks/useWallet';
 import { CryptoUtils } from '@/utils/cryptoUtils';
 import { SessionUtils } from '@/utils/sessionUtils';
+import { SessionManager } from '@/services/SessionManager';
 import { AppLayout } from '@/components/layout/AppLayout';
 
 const { Title, Text } = Typography;
@@ -34,7 +35,7 @@ function VerifyPasswordContent() {
         const errorData = await response.json();
         throw new Error(errorData.error || '获取验证数据失败');
       }
-      const { masterKeyHash, salt } = await response.json();
+      const { id, masterKeyHash, salt, avatar, nickname } = await response.json();
 
       // 获取钱包签名
       const messageText = `KeySafe Authentication\nAddress: ${address}`;
@@ -53,6 +54,14 @@ function VerifyPasswordContent() {
       
       // 保存会话数据
       await SessionUtils.setDataKey(dataKey);
+
+      // 保存用户信息
+      SessionManager.getInstance().saveUserInfo({
+        id,
+        address,
+        avatar,
+        nickname
+      });
 
       message.success('验证成功');
       router.push('/dashboard');

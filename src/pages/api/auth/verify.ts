@@ -29,7 +29,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         id: true,
         masterKeyHash: true,
         salt: true,
-        avatar: true
+        avatar: true,
+        nickname: true
       }
     });
 
@@ -44,9 +45,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     return res.status(200).json({
+      id: user.id,
       masterKeyHash: user.masterKeyHash,
       salt: user.salt,
-      avatar: user.avatar
+      avatar: user.avatar,
+      nickname: user.nickname
     });
   } catch (error) {
     console.error('验证用户失败:', error);

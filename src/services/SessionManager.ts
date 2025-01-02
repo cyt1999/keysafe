@@ -1,6 +1,16 @@
 import { CryptoUtils } from '@/utils/crypto';
 
 /**
+ * 用户信息接口
+ */
+interface UserInfo {
+  id: string;
+  address: string;
+  avatar?: string | null;
+  nickname?: string | null;
+}
+
+/**
  * 会话信息接口
  */
 interface SessionInfo {
@@ -25,6 +35,7 @@ export class SessionManager {
   private static instance: SessionManager;
   private currentSession: SessionInfo | null = null;
   private readonly config: SessionManagerConfig;
+  private readonly USER_INFO_KEY = 'keysafe_user_info';
 
   private constructor(config?: Partial<SessionManagerConfig>) {
     this.config = {
@@ -64,6 +75,46 @@ export class SessionManager {
     } catch (error) {
       console.error('创建会话失败:', error);
       throw new Error('创建会话失败');
+    }
+  }
+
+  /**
+   * 保存用户信息到本地存储
+   */
+  saveUserInfo(userInfo: UserInfo): void {
+    try {
+      localStorage.setItem(this.USER_INFO_KEY, JSON.stringify(userInfo));
+    } catch (error) {
+      console.error('保存用户信息失败:', error);
+    }
+  }
+
+  /**
+   * 从本地存储获取用户信息
+   */
+  getUserInfo(): UserInfo | null {
+    try {
+      const data = localStorage.getItem(this.USER_INFO_KEY);
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      console.error('获取用户信息失败:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 更新用户信息
+   */
+  updateUserInfo(updates: Partial<UserInfo>): void {
+    try {
+      const currentInfo = this.getUserInfo();
+      if (currentInfo) {
+        this.saveUserInfo({ ...currentInfo, ...updates });
+      } else if (updates.address) {
+        this.saveUserInfo(updates as UserInfo);
+      }
+    } catch (error) {
+      console.error('更新用户信息失败:', error);
     }
   }
 
@@ -110,9 +161,10 @@ export class SessionManager {
   }
 
   /**
-   * 清除会话
+   * 清除会话和用户信息
    */
   clearSession(): void {
     this.currentSession = null;
+    localStorage.removeItem(this.USER_INFO_KEY);
   }
 } 

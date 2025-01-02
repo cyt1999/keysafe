@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Avatar, Dropdown, MenuProps } from 'antd';
+import { Avatar, Dropdown, MenuProps, message } from 'antd';
 import { LockOutlined, WalletOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import '@/styles/components/avatar.css';
 import '@/styles/components/dropdown.css';
@@ -38,6 +38,18 @@ interface UserDropdownProps {
  */
 export function UserDropdown({ address, avatar, isUnlocked, syncInfo, onLock, onDisconnect }: UserDropdownProps) {
   const username = 'xiamu';
+  const [messageApi, contextHolder] = message.useMessage();
+
+  // 复制CID到剪贴板
+  const handleCopyCID = async (cid: string) => {
+    try {
+      await navigator.clipboard.writeText(cid);
+      messageApi.success('CID已复制到剪贴板');
+    } catch (err) {
+      console.error('复制CID失败:', err);
+      messageApi.error('复制CID失败');
+    }
+  };
 
   // 配置下拉菜单项
   const menuItems: MenuProps['items'] = [
@@ -45,6 +57,7 @@ export function UserDropdown({ address, avatar, isUnlocked, syncInfo, onLock, on
       key: 'user-info',
       label: (
         <div className="user-dropdown-info">
+          {contextHolder}
           {/* 用户头像 */}
           <Avatar 
             size={40}
@@ -71,7 +84,11 @@ export function UserDropdown({ address, avatar, isUnlocked, syncInfo, onLock, on
                 </div>
                 {/* CID信息显示（如果存在） */}
                 {syncInfo.lastSyncedCid && (
-                  <div className="sync-cid" title={syncInfo.lastSyncedCid}>
+                  <div 
+                    className="sync-cid" 
+                    title={syncInfo.lastSyncedCid}
+                    onClick={() => handleCopyCID(syncInfo.lastSyncedCid!)}
+                  >
                     CID: {`${syncInfo.lastSyncedCid.slice(0, 8)}...`}
                   </div>
                 )}

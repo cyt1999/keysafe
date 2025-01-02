@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
-import { SessionUtils } from '@/utils/sessionUtils';
 
 const prisma = new PrismaClient();
 
@@ -25,16 +24,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    // 从请求头中获取用户ID
+    const userId = req.headers['x-user-id'];
+    if (!userId || typeof userId !== 'string') {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
     // 查询数据库获取用户的同步状态
-    const user = await prisma.user.findUnique({
-      where: {
-        walletAddress: SessionUtils.getWalletAddress()
-      }
-    });
     const syncStatus = await prisma.passwordSync.findUnique({
       where: {
-        walletAddress: SessionUtils.getWalletAddress()
+        userId: userId
       },
       select: {
         lastSyncedCid: true,

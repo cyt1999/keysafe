@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Layout, Typography, Space, Button } from 'antd';
 import { WalletOutlined } from '@ant-design/icons';
 import { SessionUtils } from '@/utils/sessionUtils';
+import { SessionManager } from '@/services/SessionManager';
 import { LogoIcon } from '@/components/common/Logo';
 import { UserDropdown } from '@/components/specific/auth/UserDropdown';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
@@ -30,8 +31,8 @@ export function AppLayout({ children, address, onConnect, onDisconnect, onLock }
 
   useEffect(() => {
     if (address) {
-      const savedAvatar = localStorage.getItem(`avatar_${address.toLowerCase()}`);
-      setAvatar(savedAvatar);
+      const userInfo = SessionManager.getInstance().getUserInfo();
+      setAvatar(userInfo?.avatar || null);
     } else {
       setAvatar(null);
     }
@@ -69,7 +70,7 @@ export function AppLayout({ children, address, onConnect, onDisconnect, onLock }
                 address={address}
                 avatar={avatar}
                 isUnlocked={isUnlocked}
-                syncInfo={syncInfo || undefined}
+                syncInfo={syncInfo}
                 onLock={handleLock}
                 onDisconnect={onDisconnect}
               />

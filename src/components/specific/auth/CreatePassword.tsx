@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useWallet } from '@/hooks/useWallet';
 import { CryptoUtils } from '@/utils/cryptoUtils';
 import { SessionUtils } from '@/utils/sessionUtils';
+import { SessionManager } from '@/services/SessionManager';
 import { AppLayout } from '@/components/layout/AppLayout';
 
 const { Title, Text } = Typography;
@@ -67,10 +68,13 @@ function CreatePasswordContent() {
       }
 
       const data = await response.json();
-      // 保存头像到本地存储，以便其他组件使用
-      if (data.avatar) {
-        localStorage.setItem(`avatar_${address.toLowerCase()}`, data.avatar);
-      }
+      // 保存用户信息
+      SessionManager.getInstance().saveUserInfo({
+        id: data.id,
+        address: address.toLowerCase(),
+        avatar: data.avatar,
+        nickname: data.nickname
+      });
 
       message.success('主密码设置成功');
       router.push('/dashboard');
