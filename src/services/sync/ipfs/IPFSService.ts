@@ -1,6 +1,3 @@
-import { PinataSDK } from 'pinata-web3';
-import { EncryptedPasswordData } from './types';
-
 /**
  * IPFS服务接口
  */
@@ -32,8 +29,8 @@ export class IPFSServiceImpl implements IPFSService {
   
   constructor() {
     // 初始化Pinata配置
-    const pinataJwt = process.env.NEXT_PUBLIC_PINATA_JWT;
-    const pinataGateway = process.env.NEXT_PUBLIC_GATEWAY_URL;
+    const pinataJwt = process.env.PINATA_JWT;
+    const pinataGateway = process.env.PINATA_GATEWAY_URL;
 
     if (!pinataJwt || !pinataGateway) {
       throw new Error('Pinata配置缺失');
