@@ -5,7 +5,6 @@ import { Form, Input, Button, Slider, Checkbox, Space } from 'antd';
 import { LockOutlined, GlobalOutlined, UserOutlined, RedoOutlined, EyeOutlined, EyeInvisibleOutlined, TagOutlined } from '@ant-design/icons';
 import { PasswordEntry } from '@/utils/types';
 import { PasswordGenerator as Generator } from '@/utils/passwordGenerator';
-import '@/styles/components/password/PasswordForm.css';
 
 interface PasswordFormProps {
   form: any;
