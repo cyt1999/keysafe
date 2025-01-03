@@ -311,4 +311,75 @@ module.exports = {
 
 - [产品说明](product-guide.md)
 - [技术架构](technical-architecture.md)
-- [UI 设计指南](ui-design-guide.md) 
+- [UI 设计指南](ui-design-guide.md)
+
+## Prisma CLI 使用指南
+
+### 1. 数据库迁移
+
+```bash
+# 创建新的迁移
+npx prisma migrate dev --name <migration-name>
+
+# 部署迁移到生产环境
+npx prisma migrate deploy
+
+# 重置数据库（仅开发环境使用）
+npx prisma migrate reset
+```
+
+### 2. 数据库管理
+
+```bash
+# 启动 Prisma Studio（可视化数据库管理工具）
+npx prisma studio
+
+# 格式化 schema.prisma 文件
+npx prisma format
+
+# 验证 schema.prisma 文件
+npx prisma validate
+```
+
+### 3. 客户端生成
+
+```bash
+# 生成/更新 Prisma Client
+npx prisma generate
+
+# 生成并安装到指定路径
+npx prisma generate --schema=./path/to/schema.prisma
+```
+
+### 4. 数据库操作
+
+```bash
+# 将现有数据库拉取到 Prisma schema
+npx prisma db pull
+
+# 将 Prisma schema 推送到数据库（仅开发环境使用）
+npx prisma db push
+
+# 查看数据库的变更预览
+npx prisma db push --preview-feature
+```
+
+### 5. 种子数据
+
+```bash
+# 运行 seed 脚本填充测试数据
+npx prisma db seed
+
+# 重置数据库并运行 seed
+npx prisma migrate reset --skip-seed
+npx prisma db seed
+```
+
+### 6. 常见问题处理
+
+- 如果遇到 Prisma Client 不同步问题，运行 `npx prisma generate`
+- 开发环境修改 schema 后，使用 `npx prisma migrate dev` 更新数据库
+- 生产环境部署前，确保运行 `npx prisma migrate deploy`
+- 使用 `npx prisma studio` 可以方便地查看和编辑数据
+``` 
+</rewritten_file>
