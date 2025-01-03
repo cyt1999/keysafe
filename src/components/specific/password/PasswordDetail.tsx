@@ -4,7 +4,6 @@ import React from 'react';
 import { Modal, Form, Input, Button, Space, message } from 'antd';
 import { CopyOutlined, LinkOutlined } from '@ant-design/icons';
 import { PasswordEntry } from '@/utils/types';
-import '@/styles/components/password/PasswordForm.css';
 
 interface PasswordDetailProps {
   password: PasswordEntry | null;
