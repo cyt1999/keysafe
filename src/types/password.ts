@@ -26,4 +26,17 @@ export interface CreatePasswordParams {
 
 export interface UpdatePasswordParams extends Partial<CreatePasswordParams> {
   id: string;
+}
+
+// 密码条目的接口定义
+export interface PasswordEntry {
+  id?: string;
+  title: string;
+  username: string;
+  password: string;
+  url?: string;
+  notes?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  userId?: string;
 } 

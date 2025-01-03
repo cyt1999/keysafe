@@ -237,52 +237,6 @@ fix(sync): 修复同步服务异常
 docs(guide): 更新开发文档
 ```
 
-## 设计规范
-
-### 1. 颜色系统
-
-使用 Ant Design 和 TailwindCSS 的组合：
-```typescript
-// Ant Design 主题色
-const theme = {
-  token: {
-    colorPrimary: '#00B96B',
-    colorSuccess: '#00B96B',
-    colorWarning: '#FFB020',
-    colorError: '#FF4D4F',
-  }
-};
-
-// TailwindCSS 扩展色
-module.exports = {
-  theme: {
-    extend: {
-      colors: {
-        primary: '#00B96B',
-        success: '#00B96B',
-        warning: '#FFB020',
-        error: '#FF4D4F',
-        text: '#2C3E50',
-      }
-    }
-  }
-};
-```
-
-### 2. 布局规范
-
-- 内容最大宽度：1200px
-- 页头高度：72px
-- 内边距：32px
-- 组件间距：24px
-
-### 3. 响应式设计
-
-使用 TailwindCSS 的响应式类：
-```html
-<div class="w-full md:w-1/2 lg:w-1/3">
-```
-
 ## 最佳实践
 
 1. 组件设计

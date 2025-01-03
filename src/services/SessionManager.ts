@@ -1,5 +1,3 @@
-import { CryptoUtils } from '@/utils/crypto';
-
 /**
  * 用户信息接口
  */
@@ -53,29 +51,6 @@ export class SessionManager {
       SessionManager.instance = new SessionManager(config);
     }
     return SessionManager.instance;
-  }
-
-  /**
-   * 创建新会话
-   */
-  async createSession(signature: string, masterPassword: string, address: string): Promise<void> {
-    try {
-      // 从签名和主密码派生密钥
-      const key = await CryptoUtils.deriveKey(signature, masterPassword, address);
-      
-      const now = Date.now();
-      this.currentSession = {
-        key,
-        createdAt: now,
-        expiresAt: now + this.config.sessionDuration,
-        address
-      };
-
-      this.updateLastActivity();
-    } catch (error) {
-      console.error('创建会话失败:', error);
-      throw new Error('创建会话失败');
-    }
   }
 
   /**

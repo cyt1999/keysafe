@@ -3,8 +3,7 @@
 import React from 'react';
 import { Avatar, Dropdown, MenuProps, message } from 'antd';
 import { LockOutlined, WalletOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
-import '@/styles/components/avatar.css';
-import '@/styles/components/dropdown.css';
+import styles from '@/styles/components/auth/UserDropdown.module.css';
 
 /**
  * UserDropdown组件的属性接口
@@ -56,36 +55,36 @@ export function UserDropdown({ address, avatar, isUnlocked, syncInfo, onLock, on
     {
       key: 'user-info',
       label: (
-        <div className="user-dropdown-info">
+        <div className={styles.userDropdownInfo}>
           {contextHolder}
           {/* 用户头像 */}
           <Avatar 
             size={40}
             icon={<UserOutlined />}
             src={avatar}
-            className="user-info-avatar"
+            className={styles.userInfoAvatar}
           />
-          <div className="user-dropdown-text">
+          <div className={styles.userDropdownText}>
             {/* 用户名显示 */}
-            <div className="user-dropdown-username">
+            <div className={styles.userDropdownUsername}>
               {username}
             </div>
             {/* 钱包地址显示（显示前6位和后4位） */}
-            <div className="user-dropdown-address">
+            <div className={styles.userDropdownAddress}>
               <WalletOutlined />
               {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ''}
             </div>
             {/* IPFS同步状态信息 */}
             {syncInfo && (
-              <div className="user-dropdown-sync">
+              <div className={styles.userDropdownSync}>
                 {/* 同步状态显示 */}
-                <div className="sync-status">
+                <div className={styles.syncStatus}>
                   同步状态: {syncInfo.syncStatus}
                 </div>
                 {/* CID信息显示（如果存在） */}
                 {syncInfo.lastSyncedCid && (
                   <div 
-                    className="sync-cid" 
+                    className={styles.syncCid} 
                     title={syncInfo.lastSyncedCid}
                     onClick={() => handleCopyCID(syncInfo.lastSyncedCid!)}
                   >
@@ -93,7 +92,7 @@ export function UserDropdown({ address, avatar, isUnlocked, syncInfo, onLock, on
                   </div>
                 )}
                 {/* 最后同步时间 */}
-                <div className="sync-time">
+                <div className={styles.syncTime}>
                   最后同步: {new Date(syncInfo.lastSyncedAt).toLocaleString()}
                 </div>
               </div>
@@ -134,12 +133,13 @@ export function UserDropdown({ address, avatar, isUnlocked, syncInfo, onLock, on
     <Dropdown 
       menu={dropdownItems} 
       placement="bottomRight"
+      trigger={['click']}
     >
       <Avatar 
         size={44}
         icon={<UserOutlined />}
         src={avatar}
-        className="gradient-avatar"
+        className={styles.gradientAvatar}
       />
     </Dropdown>
   );

@@ -131,8 +131,8 @@ Chrome 浏览器扩展相关代码
    - 使用 Hooks 管理状态
 
 2. **样式管理**
-   - 优先使用 TailwindCSS
-   - 复杂样式使用 CSS Modules
+   - Ant Design 基础样式
+   - 自定义样式
 
 3. **状态管理**
    - 使用 Zustand 管理全局状态

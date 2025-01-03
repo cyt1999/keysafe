@@ -7,7 +7,12 @@ import type { AppProps } from 'next/app';
 import { Provider } from 'react-redux';
 import { store } from '@/store';
 import Head from 'next/head';
-import '@/styles/globals.css';
+
+// 1. Ant Design 基础样式
+import 'antd/dist/reset.css';
+
+// 2. 自定义全局样式
+import '@/styles/index.css';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (

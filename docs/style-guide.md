@@ -1,154 +1,201 @@
-# KeySafe 项目样式开发指南
+# KeySafe 样式指南
 
-## 目录结构
+## 1. 样式架构
+
+项目采用分层的样式管理方案，结合 Ant Design 组件库和自定义样式：
 
 ```
 src/styles/
-├── base/                # 基础样式
-│   ├── variables.css    # 全局变量（颜色、间距、字体等）
-│   └── reset.css        # 重置样式和全局样式
-├── layout/             # 布局相关样式
-│   ├── header.css      # 头部布局
-│   └── content.css     # 内容区布局
-├── components/         # 组件样式
-│   ├── button.css      # 按钮基础样式
-│   ├── input.css       # 输入框基础样式
-│   ├── modal.css       # 模态框基础样式
-│   ├── table.css       # 表格基础样式
-│   └── password/       # 特定功能模块的样式
-│       └── PasswordForm.css  # 密码表单特定样式
-└── index.css           # 样式入口文件
+├── index.css              # 样式入口文件
+├── globals.css           # 全局样式
+├── base/                 # 基础样式
+│   ├── variables.css    # 变量定义
+│   └── reset.css       # 样式重置
+├── layout/              # 布局样式
+│   ├── header.css     # 头部样式
+│   └── content.css    # 内容区样式
+└── components/         # 组件样式
+    ├── button.css     # 按钮样式
+    ├── modal.css      # 模态框样式
+    ├── table.css      # 表格样式
+    ├── tag.css        # 标签样式
+    ├── avatar.css     # 头像样式
+    ├── dropdown.css   # 下拉菜单样式
+    └── password/      # 密码管理相关样式
+        ├── PasswordForm.css
+        └── PasswordList.css
 ```
 
-## 样式规范
+## 2. 样式加载顺序
 
-### 1. 全局变量使用
+样式按照以下顺序加载，确保正确的样式覆盖：
 
-所有通用的样式值都定义在 `variables.css` 中，包括：
+1. **Ant Design 基础样式**
+   ```typescript
+   import 'antd/dist/reset.css';
+   ```
+
+2. **自定义全局样式**
+   ```typescript
+   import '@/styles/index.css';
+   ```
+
+## 3. Ant Design 主题定制
+
+### 3.1 颜色系统
+
+```typescript
+const theme = {
+  token: {
+    colorPrimary: '#00B96B',    // 主色调
+    colorSuccess: '#00B96B',    // 成功色
+    colorWarning: '#FFB020',    // 警告色
+    colorError: '#FF4D4F',      // 错误色
+  }
+};
+```
+
+### 3.2 组件样式覆盖
+
+```css
+/* 在组件样式文件中覆盖 Ant Design 默认样式 */
+.ant-btn-primary {
+  background-color: var(--primary-color);
+}
+```
+
+## 4. CSS 编写规范
+
+### 4.1 命名规范（BEM）
+
+```css
+/* Block */
+.password-form { }
+
+/* Element */
+.password-form__input { }
+
+/* Modifier */
+.password-form__button--primary { }
+```
+
+### 4.2 CSS 变量
 
 ```css
 :root {
-  /* 颜色系统 */
-  --color-primary: #00B96B;
-  --color-primary-hover: #00D6A2;
+  /* 颜色 */
+  --primary-color: #00B96B;
+  --text-color: #2C3E50;
   
-  /* 间距系统 */
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
+  /* 间距 */
+  --spacing-small: 8px;
+  --spacing-medium: 16px;
+  --spacing-large: 24px;
   
-  /* 字体系统 */
-  --font-size-base: 14px;
-  --font-weight-medium: 500;
-  
-  /* 圆角系统 */
-  --radius-md: 12px;
+  /* 圆角 */
+  --border-radius: 8px;
 }
 ```
 
-### 2. 组件样式开发
-
-#### 2.1 基础组件样式
-
-基础组件样式位于 `components/` 目录下，定义通用的组件样式：
+### 4.3 响应式设计
 
 ```css
-/* components/button.css */
-.ant-btn {
-  transition: var(--transition-base);
-  border-radius: var(--radius-md);
-  /* 其他基础样式 */
+/* 移动端优先 */
+.container {
+  padding: var(--spacing-small);
+}
+
+/* 平板 (≥768px) */
+@media (min-width: 768px) {
+  .container {
+    padding: var(--spacing-medium);
+  }
+}
+
+/* 桌面端 (≥1024px) */
+@media (min-width: 1024px) {
+  .container {
+    padding: var(--spacing-large);
+  }
 }
 ```
 
-#### 2.2 功能模块样式
+## 5. 布局规范
 
-特定功能模块的样式应放在对应的子目录中：
+### 5.1 网格系统
+
+- 最大内容宽度：1200px
+- 列间距：24px
+- 内边距：
+  - 移动端：16px
+  - 桌面端：24px
+
+### 5.2 组件间距
 
 ```css
-/* components/password/PasswordForm.css */
-.password-form {
-  /* 组件级变量 */
-  --input-height: 40px;
-  
-  /* 组件样式 */
-  width: 100%;
-  max-width: 500px;
+/* 组件垂直间距 */
+.component-wrapper + .component-wrapper {
+  margin-top: var(--spacing-large);
+}
+
+/* 表单项间距 */
+.form-item + .form-item {
+  margin-top: var(--spacing-medium);
 }
 ```
 
-### 3. 开发规范
+## 6. 最佳实践
 
-#### 3.1 变量使用原则
+### 6.1 样式隔离
 
-```css
-/* ❌ 不推荐 */
-.component {
-  color: #00B96B;
-  padding: 16px;
-}
+- 使用 BEM 命名避免样式冲突
+- 组件样式文件独立管理
+- 避免使用全局选择器
 
-/* ✅ 推荐 */
-.component {
-  color: var(--color-primary);
-  padding: var(--spacing-md);
+### 6.2 性能优化
+
+- 避免深层嵌套选择器
+- 合理使用继承和复用
+- 优化选择器性能
+
+### 6.3 维护建议
+
+- 定期清理未使用的样式
+- 保持样式文件结构清晰
+- 及时更新样式文档
+- 遵循代码审查流程
+
+### 6.4 调试技巧
+
+- 使用浏览器开发工具
+- 检查样式覆盖情况
+- 验证响应式布局
+- 使用 CSS Grid 调试工具
+
+## 7. 辅助工具
+
+### 7.1 开发工具
+
+- Chrome DevTools
+- VS Code 插件：
+  - CSS Peek
+  - CSS Modules
+  - StyleLint
+
+### 7.2 代码检查
+
+```json
+{
+  "scripts": {
+    "lint:style": "stylelint \"src/**/*.css\"",
+    "format:style": "stylelint \"src/**/*.css\" --fix"
+  }
 }
 ```
 
-#### 3.2 组件作用域
+## 8. 更新记录
 
-```css
-/* ✅ 推荐的作用域方式 */
-.feature-name {
-  --component-spacing: var(--spacing-lg);
-}
-
-.feature-name .item {
-  margin-bottom: var(--component-spacing);
-}
-```
-
-### 4. 新功能开发流程
-
-1. **创建样式文件**：
-   ```bash
-   mkdir -p src/styles/components/feature-name
-   touch src/styles/components/feature-name/FeatureName.css
-   ```
-
-2. **导入样式**：
-   ```css
-   /* index.css */
-   @import './components/feature-name/FeatureName.css';
-   ```
-
-3. **在组件中使用**：
-   ```tsx
-   import '@/styles/components/feature-name/FeatureName.css';
-   
-   export function FeatureName() {
-     return (
-       <div className="feature-name">
-         {/* 组件内容 */}
-       </div>
-     );
-   }
-   ```
-
-### 5. 样式优先级
-
-- 使用 Stylelint 进行代码检查
-- 遵循团队约定的编码规范
-- 定期进行代码审查
-
-## 结语
-
-遵循本指南可以帮助我们：
-
-- 保持代码的一致性
-- 提高开发效率
-- 减少样式冲突
-- 便于维护和扩展
-
-- 定期检查未使用的样式
-- 保持样式文件的整洁和可维护性
-- 及时更新文档 
+- 2024-01-03: 更新样式架构，移除 Tailwind 相关配置
+- 2023-12-31: 添加 Ant Design 主题配置
+- 2023-12-30: 更新响应式设计规范
+- 2023-12-29: 初始版本 

@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer';
+import { Buffer } from 'buffer/';
 import { EncryptedData, PasswordData } from './types';
 
 export class CryptoUtils {
