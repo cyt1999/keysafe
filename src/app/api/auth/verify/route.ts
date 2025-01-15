@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-
-const prisma = new PrismaClient();
 
 /**
  * 验证用户的API处理函数
@@ -47,7 +45,5 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('验证用户失败:', error);
     return NextResponse.json({ error: '验证用户失败' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }

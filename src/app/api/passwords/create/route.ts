@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-
-const prisma = new PrismaClient();
 
 /**
  * 创建新密码条目的API处理函数
@@ -40,7 +38,5 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('创建密码条目失败:', error);
     return NextResponse.json({ error: '创建密码条目失败' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 } 

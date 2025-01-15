@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-
-const prisma = new PrismaClient();
 
 /**
  * 获取用户IPFS同步状态的API处理函数
@@ -40,7 +38,5 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Error fetching sync status:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 } 

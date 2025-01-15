@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-
-const prisma = new PrismaClient();
 
 /**
  * 获取用户密码列表的API处理函数
@@ -52,7 +50,5 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('获取密码列表失败:', error);
     return NextResponse.json({ error: '获取密码列表失败' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 } 

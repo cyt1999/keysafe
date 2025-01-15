@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { generatePixelAvatar, svgToBase64 } from '@/utils/avatarGenerator';
 import { NextResponse } from 'next/server';
-
-const prisma = new PrismaClient();
 
 /**
  * 创建新用户的API处理函数
@@ -54,7 +52,5 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('创建用户失败:', error);
     return NextResponse.json({ error: '创建用户失败' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 } 

@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-
-const prisma = new PrismaClient();
 
 /**
  * 更新密码条目的API处理函数
@@ -51,7 +49,5 @@ export async function PUT(request: Request) {
   } catch (error) {
     console.error('更新密码条目失败:', error);
     return NextResponse.json({ error: '更新密码条目失败' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 } 

@@ -10,7 +10,8 @@
     "lint:fix": "next lint --fix",
     "prisma:generate": "dotenv -e .env.local prisma generate",
     "prisma:migrate": "dotenv -e .env.local prisma migrate dev",
-    "prisma:studio": "dotenv -e .env.local prisma studio"
+    "prisma:studio": "dotenv -e .env.local prisma studio",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@ant-design/icons": "^5.5.2",
