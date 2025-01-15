@@ -4,7 +4,10 @@ import { Providers } from './providers';
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'),
   title: 'KeySafe',
-  description: '安全的密码管理工具'
+  description: '安全的密码管理工具',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 // 设置视口
