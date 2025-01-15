@@ -19,6 +19,7 @@ const formatUrl = (url: string): string => {
     const cleanHostname = hostname.replace(/^www\./, '');
     return cleanHostname + '...';
   } catch (error) {
+    console.error('Error parsing URL:', error);
     // 如果URL解析失败，返回原始值
     return url;
   }

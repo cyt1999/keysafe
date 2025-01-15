@@ -107,6 +107,7 @@ const PasswordGeneratorComponent = forwardRef<PasswordGeneratorRef, PasswordGene
     );
   }
 );
+PasswordGeneratorComponent.displayName = 'PasswordGeneratorComponent';
 
 export function PasswordForm({ form, initialValues, onFinish }: PasswordFormProps) {
   const [generatorRef] = React.useState(() => ({
@@ -199,3 +200,4 @@ export function PasswordForm({ form, initialValues, onFinish }: PasswordFormProp
     </Form>
   );
 }
+PasswordForm.displayName = 'PasswordForm';

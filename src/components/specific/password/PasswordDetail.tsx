@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Modal, Form, Input, Button, Space, message } from 'antd';
+import { Modal, Form, Input, Button, message } from 'antd';
 import { CopyOutlined, LinkOutlined } from '@ant-design/icons';
 import { PasswordEntry } from '@/utils/types';
 

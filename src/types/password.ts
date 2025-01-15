@@ -1,5 +1,7 @@
 export interface Password {
   id: string;
+  encryptedData: string;
+  version: number;
   userId: string;
   title: string;
   username: string;
@@ -39,4 +41,13 @@ export interface PasswordEntry {
   createdAt?: Date;
   updatedAt?: Date;
   userId?: string;
+}
+
+export interface SyncData {
+  passwords: Array<{
+    id: string;
+    encryptedData: string;
+    version: number;
+  }>;
+  // 其他同步相关的字段...
 } 

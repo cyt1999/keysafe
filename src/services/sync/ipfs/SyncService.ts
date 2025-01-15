@@ -105,7 +105,7 @@ export class SyncService {
       const syncData = await this.ipfsService.downloadData(cid) as unknown as SyncData;
 
       // 开启事务
-      await this.prisma.$transaction(async (tx) => {
+      await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // 删除现有的密码数据
         await tx.passwordEntry.deleteMany({
           where: { userId },

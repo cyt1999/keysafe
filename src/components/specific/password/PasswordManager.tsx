@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Form, Modal, message } from 'antd';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@/hooks/useWallet';
@@ -24,34 +24,10 @@ export function PasswordManager({ customContent }: PasswordManagerProps) {
   const [viewingPassword, setViewingPassword] = useState<PasswordEntry | null>(null);
   const [form] = Form.useForm();
   const { address, disconnect } = useWallet();
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  // 初始化并加载密码列表
-  useEffect(() => {
-    const loadData = async () => {
-      if (address) {
-        try {
-          const dataKey = await SessionUtils.getDataKey();
-          if (dataKey) {
-            await loadPasswords();
-          } else {
-            router.push('/auth/verify');
-          }
-        } catch (error) {
-          console.error('初始化密码列表失败:', error);
-          messageApi.error('初始化密码列表失败');
-          router.push('/');
-        }
-      }
-    };
-
-    loadData();
-  }, [address]);
-
-  const loadPasswords = async () => {
+  const loadPasswords = useCallback(async () => {
     if (!address) return;
-
     try {
       const response = await fetch(`/api/passwords/list?address=${address.toLowerCase()}`);
       if (!response.ok) {
@@ -85,7 +61,28 @@ export function PasswordManager({ customContent }: PasswordManagerProps) {
       console.error('加载密码失败:', error);
       messageApi.error('加载密码失败');
     }
-  };
+  }, [address, messageApi, router]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (address) {
+        try {
+          const dataKey = await SessionUtils.getDataKey();
+          if (dataKey) {
+            await loadPasswords();
+          } else {
+            router.push('/auth/verify');
+          }
+        } catch (error) {
+          console.error('初始化密码列表失败:', error);
+          messageApi.error('初始化密码列表失败');
+          router.push('/');
+        }
+      }
+    };
+
+    loadData();
+  }, [address, loadPasswords, messageApi, router]);
 
   const handleSubmit = async (values: any) => {
     if (!address) return;

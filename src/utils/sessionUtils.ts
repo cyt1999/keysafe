@@ -1,5 +1,3 @@
-import { SessionData } from './types';
-
 export class SessionUtils {
   private static readonly ADDRESS_KEY = 'keysafe_session_address';
   private static readonly DATA_KEY_KEY = 'keysafe_session_data_key';
