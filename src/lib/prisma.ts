@@ -19,6 +19,10 @@ const prismaClientSingleton = () => {
  * ReturnType 用于获取 prismaClientSingleton 函数返回值的类型
  */
 declare global {
+  // 在全局声明中，我们必须使用 var
+  // 因为 let 和 const 是块级作用域，不能用于全局声明
+  // 所以这里需要禁用 ESLint 规则
+  // eslint-disable-next-line no-var
   var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
 }
 
